@@ -214,14 +214,30 @@ def seed_auditor_from_env() -> None:
         log.error("AUDITOR_EMAIL / AUDITOR_PASSWORD could not be used: %s", e)
 
 
+# The admin every fresh install starts with, so anyone who clones the project can sign in at once.
+# These are published in the README: a real deployment must set ADMIN_EMAIL / ADMIN_PASSWORD instead.
+DEFAULT_ADMIN = {"email": "admin@fiscalai.local", "password": "FiscalAI-Admin-2026", "name": "FiscalAI Admin"}
+
+
 def seed_admin_from_env() -> None:
-    """Create the admin named in ADMIN_EMAIL / ADMIN_PASSWORD, unless Ledger already has its admin."""
-    email, password = os.environ.get("ADMIN_EMAIL", "").strip(), os.environ.get("ADMIN_PASSWORD", "")
-    if not email or not password or has_admin():
+    """Create the admin on first start: from ADMIN_EMAIL / ADMIN_PASSWORD, otherwise the built-in default.
+
+    Nothing happens once an admin exists. DEFAULT_ADMIN=off switches the built-in account off,
+    which brings back the one-time setup form.
+    """
+    if has_admin():
         return
+    email, password = os.environ.get("ADMIN_EMAIL", "").strip(), os.environ.get("ADMIN_PASSWORD", "")
+    name = os.environ.get("ADMIN_NAME", "").strip()
+    if not (email and password):
+        if os.environ.get("DEFAULT_ADMIN", "on").strip().lower() in {"off", "0", "false", "no"}:
+            return
+        email, password, name = DEFAULT_ADMIN["email"], DEFAULT_ADMIN["password"], name or DEFAULT_ADMIN["name"]
+        log.warning("Created the built-in admin %s with the published default password. "
+                    "Set ADMIN_EMAIL and ADMIN_PASSWORD before putting this on the internet.", email)
     try:
-        create_user(email, os.environ.get("ADMIN_NAME", "").strip() or "Administrator", "admin", password)
-        log.info("Created the admin account %s from the environment.", email.lower())
+        create_user(email, name or "Administrator", "admin", password)
+        log.info("Created the admin account %s.", email.lower())
     except AuthError as e:
         log.error("ADMIN_EMAIL / ADMIN_PASSWORD could not be used: %s", e)
 

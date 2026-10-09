@@ -247,3 +247,30 @@ def test_ready_made_auditor_can_be_seeded_from_the_environment(monkeypatch, tmp_
     auth.seed_auditor_from_env()
     auth.seed_auditor_from_env()                                            # second start: nothing new
     assert [(u["email"], u["role"]) for u in auth.list_users()] == [("audit@nordvik.test", "auditor")]
+
+
+def test_a_fresh_install_has_the_built_in_admin(monkeypatch, tmp_path):
+    monkeypatch.setattr(service, "DB_PATH", tmp_path / "fresh.db")
+    monkeypatch.setattr(auth, "SCRYPT_N", 2 ** 8)
+    monkeypatch.setattr(auth, "_fails", {})
+    for name in ("ADMIN_EMAIL", "ADMIN_PASSWORD", "ADMIN_NAME", "DEFAULT_ADMIN"):
+        monkeypatch.delenv(name, raising=False)
+    auth.seed_admin_from_env()
+    auth.seed_admin_from_env()                                              # second start: still one admin
+    assert [(u["email"], u["role"]) for u in auth.list_users()] == [("admin@fiscalai.local", "admin")]
+    assert auth.authenticate("admin@fiscalai.local", "FiscalAI-Admin-2026")["name"] == "FiscalAI Admin"
+
+
+def test_your_own_admin_settings_replace_the_built_in_one(monkeypatch, tmp_path):
+    monkeypatch.setattr(service, "DB_PATH", tmp_path / "own.db")
+    monkeypatch.setattr(auth, "SCRYPT_N", 2 ** 8)
+    monkeypatch.setenv("ADMIN_EMAIL", "boss@nordvik.test")
+    monkeypatch.setenv("ADMIN_PASSWORD", PASSWORD)
+    auth.seed_admin_from_env()
+    assert [u["email"] for u in auth.list_users()] == ["boss@nordvik.test"]   # the published default never exists here
+
+    monkeypatch.setattr(service, "DB_PATH", tmp_path / "off.db")
+    monkeypatch.delenv("ADMIN_EMAIL"), monkeypatch.delenv("ADMIN_PASSWORD")
+    monkeypatch.setenv("DEFAULT_ADMIN", "off")
+    auth.seed_admin_from_env()
+    assert auth.list_users() == [] and auth.has_admin() is False            # back to the one-time setup form

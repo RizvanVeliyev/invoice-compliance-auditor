@@ -21,8 +21,20 @@ In a second terminal:
 cd invoice-compliance-auditor/frontend
 npm install && npm run dev
 ```
-Open http://localhost:3000/login, choose **Set up the admin**, then register an employee and an auditor and
-upload one of the sample invoices offered on the Submit page. Without an API key FiscalAI reads the sample
+Open http://localhost:3000/login and sign in as the admin that every fresh install starts with:
+
+| | |
+|---|---|
+| **Admin email** | `admin@fiscalai.local` |
+| **Admin password** | `FiscalAI-Admin-2026` |
+
+Then register an employee and an auditor (two browser windows) and upload one of the sample invoices offered
+on the Submit page. The same admin exists whether you start FiscalAI with Docker or without it.
+
+> This password is public. For anything reachable from the internet set your own `ADMIN_EMAIL` and
+> `ADMIN_PASSWORD` in `backend/.env` (or the host's environment settings) before the first start; the built-in
+> account is then never created.
+ Without an API key FiscalAI reads the sample
 PDFs with its built-in reader and every feature works; add a Gemini, Claude or GPT key in `backend/.env` to
 read real scans, photos and free text. Full instructions are under [Run it](#run-it).
 
@@ -53,7 +65,7 @@ anyone signed in ──► assistant: policy questions, "what if" checks, their 
 |---|---|---|
 | **Employee** | Registers on `/login` ("Employee" side) | Submit invoices; **My invoices**: their own spending report (per month, by category, top vendors) and every invoice with its verdict, the auditor's decision and its history; Quick check |
 | **Auditor** | Registers on `/login` ("Audit team" side) | Everything an employee can, plus the **Audit desk** (search, filters, clear to pay / reject, internal notes, reopen a decision), **Employees** (anyone's spending report and invoices), the **Overview** and the CSV export |
-| **Admin** | One account only, from `ADMIN_EMAIL` / `ADMIN_PASSWORD` (or the one-time setup form). Signs in on the same page. | Everything an auditor can, plus **Accounts**: change roles, set passwords, deactivate people, approve auditor requests |
+| **Admin** | One account only: the built-in `admin@fiscalai.local`, or your own from `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Signs in on the same page. | Everything an auditor can, plus **Accounts**: change roles, set passwords, deactivate people, approve auditor requests |
 
 Registering as an auditor gives auditor access at once (`AUDITOR_SIGNUP=open`, the default). An auditor can clear
 an invoice for payment, so where people outside the audit team can reach the sign-up page set
@@ -153,8 +165,8 @@ npm run dev
 Then open http://localhost:3000/login.
 
 - `backend/.env` is optional. Without it (or with the copied example unchanged) FiscalAI runs with the offline
-  reader, and the sign-in page offers **Set up the admin** so you can create the admin account yourself.
-- To fix the admin in advance, fill in `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env` before the first start.
+  reader and the built-in admin (`admin@fiscalai.local` / `FiscalAI-Admin-2026`).
+- To use your own admin instead of the built-in one, fill in `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env` before the first start.
 - To read real invoices, scans and photos, set `LLM_PROVIDER` to `gemini`, `anthropic` or `openai` and add that key.
   The offline reader only understands PDFs with a text layer in the `Field: value` layout, such as the samples.
 - Every machine has its own database (`backend/data/`, not in git), so accounts and invoices are not shared
@@ -173,7 +185,8 @@ audit log live in the `ledger-data` volume and survive restarts (`docker compose
 | Setting | Meaning |
 |---|---|
 | `LLM_PROVIDER` + `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | Which model reads invoices; `offline` needs no key |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | The single admin account, created on first start |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Your own admin account, created on first start instead of the built-in `admin@fiscalai.local` |
+| `DEFAULT_ADMIN` | `off` disables the built-in admin; the sign-in page then offers a one-time setup form |
 | `AUDITOR_EMAIL`, `AUDITOR_PASSWORD`, `AUDITOR_NAME` | A ready-made auditor account, created on first start |
 | `AUDITOR_SIGNUP` | `open` (default) or `approval` (the admin confirms each auditor) |
 | `COOKIE_SECURE` | `1` when served over https |

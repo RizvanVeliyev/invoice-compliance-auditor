@@ -13,7 +13,8 @@ from pydantic import BaseModel
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-import auth  # noqa: E402  (after load_dotenv so env vars are visible)
+import assistant  # noqa: E402  (after load_dotenv so env vars are visible)
+import auth  # noqa: E402
 import service  # noqa: E402
 import submissions  # noqa: E402
 
@@ -298,6 +299,19 @@ async def submit_invoice(file: UploadFile = File(...), note: str = Form(""), cur
 @app.get("/api/my/submissions")
 def my_submissions(user: dict = Depends(current_user)):
     return submissions.list_mine(user["id"], limit=500)
+
+
+class ChatMessage(BaseModel):
+    message: str
+    lang: str = "en"
+
+
+@app.post("/api/chat")
+def chat(body: ChatMessage, user: dict = Depends(current_user)):
+    """The assistant: policy questions, "what if" checks and the person's own invoices. Read-only."""
+    if not body.message.strip():
+        raise HTTPException(400, "Write a question first.")
+    return assistant.reply(POLICY, user, body.message, body.lang)
 
 
 @app.get("/api/my/report")

@@ -772,4 +772,23 @@ export const DICT: Record<string, Row> = {
   "filter.active": ["Active", "Aktiv", "Активные"],
   "filter.inactive": ["Deactivated", "Deaktiv", "Отключённые"],
   "filter.with_invoices": ["With invoices", "Fakturası olanlar", "Со счетами"],
+
+  // ---------------------------------------------------------------- assistant
+  "chat.title": ["Assistant", "Köməkçi", "Помощник"],
+  "chat.sub": ["Policy, planned expenses, your invoices", "Siyasət, planlaşdırılan xərc, fakturalarınız", "Политика, планы расходов, ваши счета"],
+  "chat.open": ["Open the assistant", "Köməkçini aç", "Открыть помощника"],
+  "chat.clear": ["Start over", "Yenidən başla", "Начать заново"],
+  "chat.send": ["Send", "Göndər", "Отправить"],
+  "chat.placeholder": ["Ask about a limit, an expense or an invoice…", "Limit, xərc və ya faktura haqqında soruşun…", "Спросите о лимите, расходе или счёте…"],
+  "chat.thinking": ["The assistant is answering", "Köməkçi cavab yazır", "Помощник отвечает"],
+  "chat.error": ["The assistant couldn't answer. Try again.", "Köməkçi cavab verə bilmədi. Yenidən cəhd edin.", "Помощник не смог ответить. Попробуйте ещё раз."],
+  "chat.hello": [
+    "Hi {name}. Ask me about the expense policy, check a planned expense (for example \"hotel 900 AZN 2 nights\"), or ask about your invoices (\"why #4\").",
+    "Salam, {name}. Xərc siyasəti haqqında soruşun, planlaşdırdığınız xərci yoxlayın (məsələn \"otel 900 AZN 2 gecə\") və ya fakturanız barədə soruşun (\"#4 niyə\").",
+    "Здравствуйте, {name}. Спросите о политике расходов, проверьте планируемый расход (например «отель 900 AZN 2 ночи») или узнайте о своём счёте («почему #4»).",
+  ],
+  "chat.s1": ["Hotel limit", "Otel limiti", "Лимит на отель"],
+  "chat.s2": ["Software 650 USD", "Proqram 650 USD", "ПО 650 USD"],
+  "chat.s3": ["My invoices", "Fakturalarım", "Мои счета"],
+  "chat.s4": ["Which currencies?", "Hansı valyutalar?", "Какие валюты?"],
 };

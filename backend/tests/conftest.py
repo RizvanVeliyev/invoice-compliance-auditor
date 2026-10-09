@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+import assistant
 import auth
 import main
 import service
@@ -23,6 +24,7 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(auth, "SCRYPT_N", 2 ** 8)          # cheap hashes: these tests sign in many times
     monkeypatch.setattr(auth, "_fails", {})
     monkeypatch.setattr(auth, "_dummy", [])
+    monkeypatch.setattr(assistant, "_recent", {})
     monkeypatch.setenv("LLM_PROVIDER", "offline")
     monkeypatch.delenv("ALERT_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("AUDITOR_SIGNUP", raising=False)

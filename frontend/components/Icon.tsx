@@ -87,6 +87,12 @@ const PATHS: Record<string, React.ReactNode> = {
   ),
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  chat: (
+    <>
+      <path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
+      <path d="M8 10h8M8 13h5" />
+    </>
+  ),
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
 };
 

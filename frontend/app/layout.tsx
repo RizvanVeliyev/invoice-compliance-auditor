@@ -7,6 +7,7 @@ import "@fontsource/courier-prime/400.css";
 import "@fontsource/courier-prime/700.css";
 import "./globals.css";
 import Nav from "@/components/Nav";
+import ChatWidget from "@/components/ChatWidget";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
@@ -34,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Nav />
               <main id="main">{children}</main>
               <Footer />
+              <ChatWidget />
             </ToastProvider>
           </AuthProvider>
         </I18nProvider>

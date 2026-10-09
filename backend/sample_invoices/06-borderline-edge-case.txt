@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Caspian Office Supplies
+Date: 2026-09-27
+Employee: Tural Ismayilov
+Category: Office Equipment
+Description: Replacement monitor and keyboard for remote workstation
+Amount: 410 AZN
+Approval: None stated
+
+Notes: Category not explicitly covered by Meals, Travel, or Software rules.

@@ -1,0 +1,164 @@
+{
+  "company_name": "Nordvik Holdings",
+  "policy_version": "v2.4",
+  "effective_date": "2026-01-01",
+  "currency": "AZN",
+  "rules": [
+    {
+      "id": "EXP-1.1",
+      "check": "per_person_limit",
+      "category": "Meals & Entertainment",
+      "description": "Client and team meal expenses may not exceed 150 AZN per person per day.",
+      "limit_amount": 150,
+      "currency": "AZN",
+      "per": "person/day"
+    },
+    {
+      "id": "EXP-1.2",
+      "check": "per_night_limit",
+      "category": "Travel - Accommodation",
+      "description": "Hotel accommodation may not exceed 300 AZN per night without Director pre-approval.",
+      "limit_amount": 300,
+      "currency": "AZN",
+      "per": "night",
+      "waived_by": [
+        "director",
+        "finance_director"
+      ]
+    },
+    {
+      "id": "EXP-2.1",
+      "check": "approval_over_amount",
+      "category": "Software & Subscriptions",
+      "description": "Software and SaaS purchases over 1000 AZN require prior written approval from the IT department before purchase.",
+      "limit_amount": 1000,
+      "currency": "AZN",
+      "per": "purchase",
+      "required_approval": "it"
+    },
+    {
+      "id": "EXP-3.1",
+      "check": "approved_vendor",
+      "category": null,
+      "description": "All vendor payments must be made to vendors on the Approved Vendor List. Payments to unlisted vendors require Finance Director sign-off documented on the invoice.",
+      "limit_amount": null,
+      "currency": null,
+      "per": null,
+      "waived_by": [
+        "finance_director"
+      ]
+    },
+    {
+      "id": "EXP-4.1",
+      "check": "approval_tiers",
+      "category": null,
+      "description": "Any single expense between 500 and 2000 AZN requires Manager approval. Expenses above 2000 AZN require Finance Director approval. The approval must be stated on the invoice/expense record.",
+      "limit_amount": null,
+      "currency": null,
+      "per": null
+    }
+  ],
+  "approval_thresholds": [
+    {
+      "min": 0,
+      "min_inclusive": true,
+      "max": 500,
+      "max_inclusive": false,
+      "required_approval": null,
+      "label": "None (auto-approved)"
+    },
+    {
+      "min": 500,
+      "min_inclusive": true,
+      "max": 2000,
+      "max_inclusive": true,
+      "required_approval": "manager",
+      "label": "Manager"
+    },
+    {
+      "min": 2000,
+      "min_inclusive": false,
+      "max": null,
+      "max_inclusive": false,
+      "required_approval": "finance_director",
+      "label": "Finance Director"
+    }
+  ],
+  "approval_levels": {
+    "manager": "Manager",
+    "it": "IT department",
+    "director": "Director",
+    "finance_director": "Finance Director"
+  },
+  "approval_covers": {
+    "manager": [
+      "manager",
+      "director",
+      "finance_director"
+    ],
+    "it": [
+      "it"
+    ],
+    "director": [
+      "director",
+      "finance_director"
+    ],
+    "finance_director": [
+      "finance_director"
+    ]
+  },
+  "approved_vendors": [
+    "Baku Business Hotel",
+    "AzTech Solutions LLC",
+    "City Catering Group",
+    "Caspian Office Supplies",
+    "SkyLine Travel Agency",
+    "NovaCloud Hosting"
+  ],
+  "category_aliases": {
+    "Meals & Entertainment": [
+      "meals",
+      "meal",
+      "entertainment",
+      "restaurant",
+      "catering",
+      "food"
+    ],
+    "Travel - Accommodation": [
+      "accommodation",
+      "hotel",
+      "hotels",
+      "lodging",
+      "hostel"
+    ],
+    "Software & Subscriptions": [
+      "software",
+      "saas",
+      "subscription",
+      "subscriptions",
+      "license",
+      "cloud"
+    ]
+  },
+  "required_fields": [
+    "vendor",
+    "amount",
+    "date",
+    "employee"
+  ],
+  "uncovered_category": {
+    "action": "needs_review",
+    "cleared_when": "amount falls in an approval tier that requires approval and that approval is documented on the record"
+  },
+  "fx_rates": null,
+  "decision_notes": [
+    "Foreign-currency invoices are routed to needs_review: this policy defines no exchange rate.",
+    "A missing attendee count on a meal is assumed to be 1 person (strictest reading) and reported as an assumption.",
+    "Tier boundaries: 500 AZN needs Manager approval; exactly 2000 AZN still needs only Manager; above 2000 needs Finance Director.",
+    "A higher approval covers a lower one (Director or Finance Director satisfy a Manager requirement); IT approval is separate.",
+    "Generic 'travel' (flights, taxis, trains) is NOT accommodation: only hotel/lodging categories get the per-night rule. Other travel is an uncovered category.",
+    "Uncovered categories under the first approval tier go to needs_review (no rule and no approval to rely on); in an approval tier they are cleared by the documented tier approval. This follows sample case 06 vs case 18.",
+    "Zero or negative amounts (refunds, credit notes) are routed to needs_review.",
+    "Approval claims are verified by code against the document text; claims that cannot be found, are pending/refused, or come from text addressed to an automated reviewer are discarded and sent to review."
+  ]
+}

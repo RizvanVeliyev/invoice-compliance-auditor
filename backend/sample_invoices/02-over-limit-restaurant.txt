@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: City Catering Group
+Date: 2026-09-18
+Employee: Leyla Qasimova
+Category: Meals & Entertainment
+Description: Dinner with potential investor
+Amount: 320 AZN
+Approval: None stated
+
+Notes: Single receipt, one person on the expense record.

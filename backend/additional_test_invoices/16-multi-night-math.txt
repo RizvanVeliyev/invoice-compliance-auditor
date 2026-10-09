@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Baku Business Hotel
+Date: 2026-09-30 to 2026-10-03
+Employee: Aysel Karimova
+Category: Travel - Accommodation
+Description: 3 nights during regional sales conference
+Amount: 1050 AZN total (3 nights)
+Approval: None stated
+
+Notes: Single combined hotel bill for the stay.

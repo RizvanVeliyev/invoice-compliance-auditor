@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: City Catering Group
+Date: [not provided]
+Employee: Nurlan Babayev
+Category: Meals & Entertainment
+Description: Team lunch
+Amount: 90 AZN
+Approval: N/A (under 500 AZN threshold)
+
+Notes: Receipt photo is missing a visible date.

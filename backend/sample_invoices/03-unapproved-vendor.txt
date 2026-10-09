@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Baku Elite Catering House
+Date: 2026-09-20
+Employee: Rashad Aliyev
+Category: Meals & Entertainment
+Description: Small team lunch
+Amount: 140 AZN
+Approval: None stated
+
+Notes: New vendor, first time used by this employee.

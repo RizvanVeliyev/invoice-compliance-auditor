@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: AzTech Solutions LLC
+Date: 2026-09-22
+Employee: Elvin Huseynov
+Category: Software & Subscriptions
+Description: Annual license renewal for design software
+Amount: 3200 AZN
+Approval: None stated
+
+Notes: Recurring purchase, same tool as last year.

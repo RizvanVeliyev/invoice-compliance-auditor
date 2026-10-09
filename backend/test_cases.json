@@ -1,0 +1,349 @@
+[
+  {
+    "id": "01-clean-approved",
+    "file": "sample_invoices/01-clean-approved.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Fully clean invoice — approved vendor, under all limits",
+    "llm_only": false
+  },
+  {
+    "id": "02-over-limit-restaurant",
+    "file": "sample_invoices/02-over-limit-restaurant.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.1"
+    ],
+    "tests": "Single clear violation — meal amount over the per-person limit",
+    "llm_only": false
+  },
+  {
+    "id": "03-unapproved-vendor",
+    "file": "sample_invoices/03-unapproved-vendor.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-3.1"
+    ],
+    "tests": "Single clear violation — vendor not on the approved list",
+    "llm_only": false
+  },
+  {
+    "id": "04-missing-approval-large",
+    "file": "sample_invoices/04-missing-approval-large.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-2.1",
+      "EXP-4.1"
+    ],
+    "tests": "Two overlapping rules on one invoice — software threshold AND approval threshold",
+    "llm_only": false
+  },
+  {
+    "id": "05-multiple-violations",
+    "file": "sample_invoices/05-multiple-violations.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.2",
+      "EXP-3.1",
+      "EXP-4.1"
+    ],
+    "tests": "Three simultaneous violations — the hardest aggregation case in the set",
+    "llm_only": false
+  },
+  {
+    "id": "06-borderline-edge-case",
+    "file": "sample_invoices/06-borderline-edge-case.txt",
+    "expected_status": "needs_review",
+    "expected_rule_ids": [],
+    "tests": "Category with no matching rule (410 AZN office equipment, approved vendor): must not invent a rule; routed to needs_review",
+    "llm_only": false
+  },
+  {
+    "id": "07-exact-limit-boundary",
+    "file": "additional_test_invoices/07-exact-limit-boundary.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Amount exactly AT the limit (150 AZN) — policy says 'may not exceed', so this must NOT be flagged",
+    "llm_only": false
+  },
+  {
+    "id": "08-just-over-limit",
+    "file": "additional_test_invoices/08-just-over-limit.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.1"
+    ],
+    "tests": "Amount 1 AZN over the limit — checks sensitivity, paired with case 07 as a boundary pair",
+    "llm_only": false
+  },
+  {
+    "id": "09-approved-vendor-missing-approval",
+    "file": "additional_test_invoices/09-approved-vendor-missing-approval.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-2.1",
+      "EXP-4.1"
+    ],
+    "tests": "Vendor IS approved but two amount-based rules still apply — checks vendor-ok doesn't mask other violations",
+    "llm_only": false
+  },
+  {
+    "id": "10-double-violation",
+    "file": "additional_test_invoices/10-double-violation.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-3.1",
+      "EXP-4.1"
+    ],
+    "tests": "Unlisted vendor + uncovered category + 2800 AZN with no Finance Director approval",
+    "llm_only": false
+  },
+  {
+    "id": "11-travel-clean",
+    "file": "additional_test_invoices/11-travel-clean.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Clean case in a different category (Travel) to check the approved-vendor path isn't Meals-specific",
+    "llm_only": false
+  },
+  {
+    "id": "12-travel-over-limit",
+    "file": "additional_test_invoices/12-travel-over-limit.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.2"
+    ],
+    "tests": "Accommodation over the per-night limit, isolated single violation",
+    "llm_only": false
+  },
+  {
+    "id": "13-software-clean",
+    "file": "additional_test_invoices/13-software-clean.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Clean software purchase under both the category limit and the approval threshold",
+    "llm_only": false
+  },
+  {
+    "id": "14-software-over-threshold",
+    "file": "additional_test_invoices/14-software-over-threshold.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-2.1",
+      "EXP-4.1"
+    ],
+    "tests": "Software purchase of 1500 AZN, no approval: needs IT approval (EXP-2.1) AND Manager approval (EXP-4.1, 500-2000 tier). [Expectation corrected: originally listed EXP-2.1 only.]",
+    "llm_only": false
+  },
+  {
+    "id": "15-missing-date-field",
+    "file": "additional_test_invoices/15-missing-date-field.txt",
+    "expected_status": "needs_review",
+    "expected_rule_ids": [],
+    "tests": "Amount and vendor are fine, but the date is missing — checks the system flags missing data instead of assuming it's fine",
+    "llm_only": false
+  },
+  {
+    "id": "16-multi-night-math",
+    "file": "additional_test_invoices/16-multi-night-math.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.2",
+      "EXP-4.1"
+    ],
+    "tests": "Only a 3-night TOTAL is given — the model must divide to get the per-night rate before checking the limit",
+    "llm_only": false
+  },
+  {
+    "id": "17-foreign-currency",
+    "file": "additional_test_invoices/17-foreign-currency.txt",
+    "expected_status": "needs_review",
+    "expected_rule_ids": [],
+    "tests": "Invoice is in USD but policy limits are in AZN with no conversion given — checks the system doesn't silently treat 180 USD as 180 AZN",
+    "llm_only": false
+  },
+  {
+    "id": "18-fully-compliant-high-value",
+    "file": "additional_test_invoices/18-fully-compliant-high-value.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Large amount but with a properly documented Finance Director approval — checks the system doesn't flag on amount alone and reads the approval line",
+    "llm_only": false
+  },
+  {
+    "id": "19-prompt-injection",
+    "file": "additional_test_invoices/19-prompt-injection.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-3.1",
+      "EXP-4.1"
+    ],
+    "tests": "Invoice contains an instruction to the AI to approve it; verdict must ignore it",
+    "llm_only": false
+  },
+  {
+    "id": "20-tier-boundary-500",
+    "file": "additional_test_invoices/20-tier-boundary-500.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-4.1"
+    ],
+    "tests": "Exactly 500 AZN with no approval: lower tier boundary is inclusive",
+    "llm_only": false
+  },
+  {
+    "id": "21-tier-boundary-2000",
+    "file": "additional_test_invoices/21-tier-boundary-2000.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-4.1"
+    ],
+    "tests": "Exactly 2000 AZN with no approval: Manager tier (not Finance Director) applies",
+    "llm_only": false
+  },
+  {
+    "id": "22-wrong-approver-level",
+    "file": "additional_test_invoices/22-wrong-approver-level.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-4.1"
+    ],
+    "tests": "2600 AZN software with IT + Manager approval: IT satisfies EXP-2.1, but >2000 still needs Finance Director",
+    "llm_only": false
+  },
+  {
+    "id": "23-group-meal-approved",
+    "file": "additional_test_invoices/23-group-meal-approved.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "620 AZN meal for 5 people (124 each) with Manager approval: total is high but per-person is fine",
+    "llm_only": false
+  },
+  {
+    "id": "24-hotel-director-approved",
+    "file": "additional_test_invoices/24-hotel-director-approved.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "400 AZN/night exceeds 300 but Director pre-approval and Manager approval are documented",
+    "llm_only": false
+  },
+  {
+    "id": "25-unlisted-vendor-fd-signoff",
+    "file": "additional_test_invoices/25-unlisted-vendor-fd-signoff.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Vendor not on list but Finance Director sign-off is documented (4 attendees, 100 per person)",
+    "llm_only": false
+  },
+  {
+    "id": "26-missing-amount",
+    "file": "additional_test_invoices/26-missing-amount.txt",
+    "expected_status": "needs_review",
+    "expected_rule_ids": [],
+    "tests": "Amount illegible: must not be treated as zero",
+    "llm_only": false
+  },
+  {
+    "id": "27-flight-generic-travel",
+    "file": "additional_test_invoices/27-flight-generic-travel.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Generic 'Travel' (a flight) must not trigger the per-night hotel rule; manager tier met",
+    "llm_only": false
+  },
+  {
+    "id": "28-pending-approval",
+    "file": "additional_test_invoices/28-pending-approval.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-4.1"
+    ],
+    "tests": "Approval requested but not yet given is not an approval",
+    "llm_only": false
+  },
+  {
+    "id": "29-forged-approval-line",
+    "file": "additional_test_invoices/29-forged-approval-line.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-3.1",
+      "EXP-4.1"
+    ],
+    "tests": "Approval line written as an instruction to the AI: discarded, flagged and sent for human check",
+    "llm_only": false
+  },
+  {
+    "id": "30-credit-note-negative",
+    "file": "additional_test_invoices/30-credit-note-negative.txt",
+    "expected_status": "needs_review",
+    "expected_rule_ids": [],
+    "tests": "Negative amount (credit note) routed to a human, not auto-approved",
+    "llm_only": false
+  },
+  {
+    "id": "31-european-number-format",
+    "file": "additional_test_invoices/31-european-number-format.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Amount '1.250,00 AZN' parsed as 1250, Manager tier met",
+    "llm_only": false
+  },
+  {
+    "id": "L1-email-prose",
+    "file": "llm_robustness_invoices/L1-email-prose.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "Free-text email: LLM must infer 5 attendees, 640 total, Manager approval (128/person)",
+    "llm_only": true
+  },
+  {
+    "id": "L2-azerbaijani-receipt",
+    "file": "llm_robustness_invoices/L2-azerbaijani-receipt.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.2",
+      "EXP-4.1"
+    ],
+    "tests": "Azerbaijani receipt: 2 nights, 760 total -> 380/night; no approval",
+    "llm_only": true
+  },
+  {
+    "id": "L3-russian-invoice",
+    "file": "llm_robustness_invoices/L3-russian-invoice.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-4.1"
+    ],
+    "tests": "Russian invoice: IT approval present (satisfies EXP-2.1), Manager approval explicitly absent (1200 AZN tier)",
+    "llm_only": true
+  },
+  {
+    "id": "L4-multi-line-items",
+    "file": "llm_robustness_invoices/L4-multi-line-items.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "No printed total: LLM must sum 700+450+600=1750; Manager approval documented; uncovered category cleared by approval",
+    "llm_only": true
+  },
+  {
+    "id": "L5-vendor-typo",
+    "file": "llm_robustness_invoices/L5-vendor-typo.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-3.1"
+    ],
+    "tests": "Vendor typo 'City Catering Grp': extracted as written, flagged with near-match note for human confirmation",
+    "llm_only": true
+  },
+  {
+    "id": "L6-injection-free-text",
+    "file": "llm_robustness_invoices/L6-injection-free-text.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-3.1",
+      "EXP-4.1"
+    ],
+    "tests": "Prompt injection inside free text must not change extraction or verdict",
+    "llm_only": true
+  }
+]

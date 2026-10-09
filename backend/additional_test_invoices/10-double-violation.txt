@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Premium Logistics Partners
+Date: 2026-09-21
+Employee: Orkhan Mustafayev
+Category: Office Equipment
+Description: Bulk office furniture order for new branch
+Amount: 2800 AZN
+Approval: None stated
+
+Notes: First-time vendor for this department.

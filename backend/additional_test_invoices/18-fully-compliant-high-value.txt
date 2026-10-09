@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Caspian Office Supplies
+Date: 2026-10-02
+Employee: Elvin Guliyev
+Category: Office Equipment
+Description: New workstation setup for 2 new hires (desks, monitors, chairs)
+Amount: 2500 AZN
+Approval: Approved by Sabina Huseynli, Finance Director (approval email on file, ref #FD-2026-0847)
+
+Notes: Approved vendor, high-value purchase with documented sign-off.

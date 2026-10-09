@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: AzTech Solutions LLC
+Date: 2026-10-05
+Employee: Elvin Huseynov
+Category: Software & Subscriptions
+Description: Annual analytics license
+Amount: 2600 AZN
+Approval: Approved by IT department (email 2026-10-01) and by Manager Rauf Ismayilov
+
+Notes: Above 2000 AZN needs Finance Director; Manager approval is not enough. IT approval satisfies EXP-2.1 only.

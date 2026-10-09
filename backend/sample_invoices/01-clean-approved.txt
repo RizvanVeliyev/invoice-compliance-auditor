@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: City Catering Group
+Date: 2026-09-14
+Employee: Vusal Mammadov
+Category: Meals & Entertainment
+Description: Team lunch with 2 clients, project kickoff discussion
+Amount: 130 AZN
+Approval: N/A (under 500 AZN threshold)
+
+Notes: Receipt attached. Standard client lunch, within per-person guidance.

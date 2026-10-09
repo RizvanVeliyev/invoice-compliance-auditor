@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: AzTech Solutions LLC
+Date: 2026-09-19
+Employee: Samira Jafarova
+Category: Software & Subscriptions
+Description: New project management software license, annual
+Amount: 2500 AZN
+Approval: None stated
+
+Notes: Vendor is on the approved list; approval status unclear.

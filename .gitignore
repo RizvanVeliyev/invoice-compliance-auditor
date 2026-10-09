@@ -1,0 +1,11 @@
+backend/.env
+.env
+backend/__pycache__/
+**/__pycache__/
+.pytest_cache/
+backend/venv/
+backend/data/
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/tsconfig.tsbuildinfo

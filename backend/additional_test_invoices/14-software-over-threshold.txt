@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: NovaCloud Hosting
+Date: 2026-09-28
+Employee: Farid Nagiyev
+Category: Software & Subscriptions
+Description: One-time annual plan upgrade with extra storage tier
+Amount: 1500 AZN
+Approval: None stated
+
+Notes: Approved vendor, but this is a one-time purchase above the usual monthly plan.

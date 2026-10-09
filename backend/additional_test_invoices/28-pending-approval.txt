@@ -1,0 +1,9 @@
+EXPENSE RECORD
+
+Vendor: Caspian Office Supplies
+Date: 2026-10-04
+Employee: Tural Ismayilov
+Category: Office Equipment
+Description: Two ergonomic chairs
+Amount: 820 AZN
+Approval: Pending manager approval (requested 2026-10-04)

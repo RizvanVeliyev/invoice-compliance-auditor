@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Baku Business Hotel
+Date: 2026-10-07 to 2026-10-10
+Employee: Gunel Rzayeva
+Category: Travel - Accommodation
+Description: 3 nights, board meeting week
+Amount: 1200 AZN total (3 nights)
+Approval: Pre-approved by Director Kamal Aliyev; Manager Rauf Ismayilov approved the total
+
+Notes: 400 AZN/night exceeds 300, but Director pre-approval is documented.

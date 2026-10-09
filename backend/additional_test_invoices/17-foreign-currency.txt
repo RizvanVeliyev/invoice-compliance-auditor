@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: City Catering Group
+Date: 2026-10-01
+Employee: Tofiq Mammadli
+Category: Meals & Entertainment
+Description: Dinner with visiting international partner
+Amount: $180 USD
+Approval: None stated
+
+Notes: Paid by employee's personal card while traveling, receipt is in USD.

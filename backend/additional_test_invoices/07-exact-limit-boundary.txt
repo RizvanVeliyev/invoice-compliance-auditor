@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: City Catering Group
+Date: 2026-09-15
+Employee: Kamran Sadigov
+Category: Meals & Entertainment
+Description: Client lunch, single attendee
+Amount: 150 AZN
+Approval: N/A (under 500 AZN threshold)
+
+Notes: Receipt attached, amount matches the policy limit exactly.

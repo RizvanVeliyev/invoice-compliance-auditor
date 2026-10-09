@@ -1,0 +1,9 @@
+EXPENSE RECORD
+
+Vendor: Caspian Office Supplies
+Date: 2026-10-06
+Employee: Nigar Aliyeva
+Category: Office Equipment
+Description: Meeting room display
+Amount: 1.250,00 AZN
+Approval: Approved by Manager Rauf Ismayilov

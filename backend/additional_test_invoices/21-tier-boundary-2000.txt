@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Caspian Office Supplies
+Date: 2026-10-04
+Employee: Nigar Abbasova
+Category: Office Equipment
+Description: Conference room chairs
+Amount: 2000 AZN
+Approval: None stated
+
+Notes: Exactly 2000 AZN: still the Manager tier, not Finance Director.

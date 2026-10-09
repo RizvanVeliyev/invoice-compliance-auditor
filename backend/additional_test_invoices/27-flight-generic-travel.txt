@@ -1,0 +1,9 @@
+EXPENSE RECORD
+
+Vendor: SkyLine Travel Agency
+Date: 2026-10-02
+Employee: Leyla Mammadova
+Category: Travel
+Description: Return flight Baku - Istanbul for supplier visit
+Amount: 900 AZN
+Approval: Approved by Manager Rauf Ismayilov

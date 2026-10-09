@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: NovaCloud Hosting
+Date: 2026-09-26
+Employee: Farid Nagiyev
+Category: Software & Subscriptions
+Description: Monthly cloud hosting plan upgrade
+Amount: 450 AZN
+Approval: N/A (under 500 AZN threshold)
+
+Notes: Recurring monthly expense, approved vendor.

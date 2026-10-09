@@ -1,0 +1,9 @@
+EXPENSE RECORD
+
+Vendor: City Catering Grp
+Date: 2026-10-07
+Employee: Kamran Sadigov
+Category: Meals & Entertainment
+Description: Client lunch, single attendee
+Amount: 95 AZN
+Approval: N/A

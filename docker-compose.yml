@@ -1,0 +1,33 @@
+# One command:  docker compose up --build
+#   Employee page  http://localhost:3000/submit
+#   Audit desk     http://localhost:3000/audit
+# Works with no configuration (offline reader for text PDFs). To use an AI model,
+# copy backend/.env.example to backend/.env and set LLM_PROVIDER + its API key.
+services:
+  backend:
+    build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: false      # no .env -> offline reader, open audit desk
+    environment:
+      AUDIT_DB_PATH: /app/data/audit.db
+    volumes:
+      - ledger-data:/app/data          # audit log + uploaded invoice files survive restarts
+    ports:
+      - "8000:8000"                    # optional: direct API access / docs at /docs
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ledger-data:

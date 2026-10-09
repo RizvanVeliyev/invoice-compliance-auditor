@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Prestige Business Lounge
+Date: 2026-09-25
+Employee: Nigar Abbasova
+Category: Travel - Accommodation
+Description: 2 nights hotel stay during client visit to Baku
+Amount: 780 AZN (390 AZN/night)
+Approval: None stated
+
+Notes: Vendor not previously used by the finance team.

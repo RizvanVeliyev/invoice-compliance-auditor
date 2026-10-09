@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Baku Business Hotel
+Date: 2026-09-24
+Employee: Gunel Rzayeva
+Category: Travel - Accommodation
+Description: 1 night stay, urgent client meeting
+Amount: 350 AZN
+Approval: None stated
+
+Notes: Last-minute booking, no pre-approval requested.

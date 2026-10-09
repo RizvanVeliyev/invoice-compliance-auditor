@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Caspian Office Supplies
+Date: 2026-10-04
+Employee: Nigar Abbasova
+Category: Office Equipment
+Description: Printer and toner
+Amount: 500 AZN
+Approval: None stated
+
+Notes: Exactly on the 500 AZN boundary: policy says 'between 500 and 2000' needs Manager approval.

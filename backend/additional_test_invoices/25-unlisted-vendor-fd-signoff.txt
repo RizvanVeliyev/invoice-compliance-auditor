@@ -1,0 +1,11 @@
+EXPENSE RECORD
+
+Vendor: Zeynalov Family Restaurant
+Date: 2026-10-08
+Employee: Tural Ismayilov
+Category: Meals & Entertainment
+Description: Team dinner, 4 attendees including employee
+Amount: 400 AZN
+Approval: Unlisted vendor; sign-off by Finance Director Sabina Huseynli (ref #FD-2026-0901)
+
+Notes: 100 AZN per person; vendor rule satisfied by documented Finance Director sign-off.

@@ -144,5 +144,10 @@ def test_audit_team_questions_are_for_the_audit_team(client, as_, submit):
     vio = chat(client, "most broken rules")
     assert "EXP-1.2: 1 time(s)" in vio["text"] and "EXP-4.1: 1 time(s)" in vio["text"] and "Duplicates refused: 1." in vio["text"]
     assert vio["actions"][0]["href"] == "/overview"
+    as_("admin")
+    submit("7-software-in-dollars.pdf")                                 # the admin's own invoice
+    assert "Farid Admin" in chat(client, "who spends the most?")["text"]
+    as_("auditor")
+    assert "Farid Admin" not in chat(client, "who spends the most?")["text"]     # hidden from auditors, as on Employees
     queue = chat(client, "очередь", "ru")
     assert queue["tone"] == "warn" and queue["actions"] == [{"label": "Открыть стол аудита", "href": "/audit"}]

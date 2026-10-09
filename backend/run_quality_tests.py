@@ -56,7 +56,8 @@ def run(provider: str):
             print(f"[{i:2d}/{len(CASES)}] {c['id']:<34} {'PASS' if ok else 'FAIL'}")
         rows.append(row)
         if provider != "offline":
-            time.sleep(1.2)
+            # Free-tier keys allow only a few calls a minute; a rate-limit error would count as a failed case.
+            time.sleep(float(os.environ.get("QUALITY_TEST_PAUSE", "7")))
     return rows
 
 
@@ -79,7 +80,7 @@ def report(rows, provider):
               "| Method | Exact pass (status + rules) | Status only | Violations correctly cited |",
               "|---|---|---|---|",
               f"| Amount-threshold filter (spreadsheet-style baseline) | {len(b_ok)}/{len(det)} | {len(b_stat)}/{len(det)} | {found}/{total_exp} |",
-              f"| Ledger (extraction + rules engine) | {sum(1 for r in det if r.get('ok'))}/{len(det)} | "
+              f"| FiscalAI (extraction + rules engine) | {sum(1 for r in det if r.get('ok'))}/{len(det)} | "
               f"{sum(1 for r in det if r.get('actual_status') == r['case']['expected_status'])}/{len(det)} | "
               f"{sum(len(set(r['actual_rules']) & set(r['case']['expected_rule_ids'])) for r in viol if not r['error'])}/{total_exp} |",
               "", "The baseline checks only raw totals against category limits. It cannot divide by people or nights, "

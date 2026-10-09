@@ -346,17 +346,22 @@ def export_csv():
         "Content-Disposition": 'attachment; filename="ledger-invoices.csv"'})
 
 
-@app.get("/api/employees", dependencies=[Depends(require_auditor)])
-def employees():
-    """Everyone with an account and what they have submitted."""
-    return submissions.people(POLICY, auth.list_users())
+def _visible_accounts(viewer: dict) -> list[dict]:
+    """The accounts a member of the audit team may look at. The admin account is shown only to the admin."""
+    return [u for u in auth.list_users() if viewer["role"] == "admin" or u["role"] != "admin"]
 
 
-@app.get("/api/employees/{uid}", dependencies=[Depends(require_auditor)])
-def employee(uid: int, months: int = 6):
+@app.get("/api/employees")
+def employees(viewer: dict = Depends(require_auditor)):
+    """Everyone with an account and what they have submitted (an auditor does not see the admin)."""
+    return submissions.people(POLICY, _visible_accounts(viewer))
+
+
+@app.get("/api/employees/{uid}")
+def employee(uid: int, months: int = 6, viewer: dict = Depends(require_auditor)):
     """One person's spending report and their invoices, for the audit team."""
     user = auth.get_user(uid)
-    if not user:
+    if not user or (user["role"] == "admin" and viewer["role"] != "admin"):
         raise HTTPException(404, "Account not found.")
     return {"user": user, "report": submissions.report(POLICY, uid, months),
             "submissions": submissions.list_(user_id=uid, limit=500)}

@@ -131,14 +131,33 @@
       "entertainment",
       "restaurant",
       "catering",
-      "food"
+      "food",
+      "yemək",
+      "nahar",
+      "şam yeməyi",
+      "restoran",
+      "qonaqlıq",
+      "питание",
+      "обед",
+      "ужин",
+      "ресторан",
+      "еда",
+      "представительские"
     ],
     "Travel - Accommodation": [
       "accommodation",
       "hotel",
       "hotels",
       "lodging",
-      "hostel"
+      "hostel",
+      "otel",
+      "mehmanxana",
+      "yaşayış",
+      "gecələmə",
+      "отель",
+      "гостиница",
+      "проживание",
+      "размещение"
     ],
     "Software & Subscriptions": [
       "software",
@@ -146,7 +165,17 @@
       "subscription",
       "subscriptions",
       "license",
-      "cloud"
+      "cloud",
+      "proqram",
+      "proqram təminatı",
+      "lisenziya",
+      "abunə",
+      "abunəlik",
+      "программное обеспечение",
+      "программа",
+      "подписка",
+      "лицензия",
+      "софт"
     ]
   },
   "required_fields": [

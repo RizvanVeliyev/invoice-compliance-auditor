@@ -101,7 +101,8 @@ def test_audit_team_sees_every_person_and_their_report(client, as_, submit):
     submit("7-software-in-dollars.pdf")
     as_("auditor")
     people = client.get("/api/employees").json()
-    assert len(people) == 3 and people[0]["name"] == "Murad Quliyev"            # most invoices first
+    assert len(people) == 2 and people[0]["name"] == "Murad Quliyev"            # most invoices first
+    assert all(p["role"] != "admin" for p in people)                            # an auditor does not see the admin
     assert {k: people[0][k] for k in ("count", "amount", "flagged", "rejected", "in_review", "role")} == {
         "count": 2, "amount": 2245.0, "flagged": 2, "rejected": 0, "in_review": 2, "role": "employee"}
     assert people[1]["count"] == 0 and people[1]["last_submission"] is None
@@ -109,6 +110,13 @@ def test_audit_team_sees_every_person_and_their_report(client, as_, submit):
     assert one["user"]["email"] == "murad@nordvik.test" and "password_hash" not in one["user"]
     assert one["report"]["money"]["amount"] == 2245.0 and len(one["submissions"]) == 2
     assert client.get("/api/employees/9999").status_code == 404
+
+    as_("admin")
+    everyone = client.get("/api/employees").json()
+    admin = next(p for p in everyone if p["role"] == "admin")
+    assert len(everyone) == 3 and client.get(f"/api/employees/{admin['id']}").status_code == 200
+    as_("auditor")
+    assert client.get(f"/api/employees/{admin['id']}").status_code == 404        # not by guessing the id either
 
 
 def test_list_can_be_filtered_and_paged(client, as_, submit):

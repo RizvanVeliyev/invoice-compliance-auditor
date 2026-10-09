@@ -6,6 +6,26 @@ broken, with the exact numbers**, or that a person must look (missing date, a cu
 rate for, a category the policy does not cover). Auditors clear or reject, and everyone can see where the
 money went.
 
+## Quick start (no API key needed)
+Repository: https://github.com/RizvanVeliyev/invoice-compliance-auditor (there is no hosted demo; run it locally).
+
+```bash
+git clone https://github.com/RizvanVeliyev/invoice-compliance-auditor.git
+cd invoice-compliance-auditor/backend
+python -m venv venv && venv\Scripts\activate        # macOS / Linux: source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --port 8000
+```
+In a second terminal:
+```bash
+cd invoice-compliance-auditor/frontend
+npm install && npm run dev
+```
+Open http://localhost:3000/login, choose **Set up the admin**, then register an employee and an auditor and
+upload one of the sample invoices offered on the Submit page. Without an API key FiscalAI reads the sample
+PDFs with its built-in reader and every feature works; add a Gemini, Claude or GPT key in `backend/.env` to
+read real scans, photos and free text. Full instructions are under [Run it](#run-it).
+
 **Design principle: the AI reads, the code decides.**
 An LLM turns messy input (free text, emails, Azerbaijani/Russian receipts, PDFs, photos) into a structured
 record. A deterministic rules engine (`backend/rules_engine.py`, driven by `backend/policy.json`) then makes

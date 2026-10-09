@@ -416,9 +416,10 @@ def _howto(policy: dict, lang: str) -> str:
     return _t("howto", lang, a=_n(tiers[0]["min"]), b=_n(tiers[-1]["min"]), cur=policy.get("currency", "AZN"))
 
 
-def _who(policy: dict, lang: str) -> str:
+def _who(policy: dict, lang: str, viewer: dict) -> str:
     import auth
-    top = [p for p in submissions.people(policy, auth.list_users()) if p["count"] > 0]
+    accounts = [u for u in auth.list_users() if viewer["role"] == "admin" or u["role"] != "admin"]   # as on Employees
+    top = [p for p in submissions.people(policy, accounts) if p["count"] > 0]
     top.sort(key=lambda p: -p["amount"])
     if not top:
         return _t("who_none", lang)
@@ -529,7 +530,7 @@ def reply(policy: dict, user: dict, message: str, lang: str = "en") -> dict:
         return out(_t("queue", lang, open=q["open"], flagged=q["flagged"], review=q["needs_review"], decided=q["decided"],
                       total=q["total"]), "warn" if q["open"] else "ok", [link("a_desk", "/audit")])
     if auditor and _has(text, "who"):
-        return out(_who(policy, lang), actions=[link("a_people", "/employees")])
+        return out(_who(policy, lang, user), actions=[link("a_people", "/employees")])
     if auditor and _has(text, "violations"):
         return out(_violations(policy, lang), actions=[link("a_overview", "/overview")])
     if _has(text, "breakdown"):

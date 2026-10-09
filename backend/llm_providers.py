@@ -14,6 +14,7 @@ Every call returns (record, usage) where usage = {input_tokens, output_tokens}.
 import base64
 import json
 import os
+import time
 
 import approval_guard
 import offline_extractor
@@ -130,6 +131,25 @@ def normalize_record(rec: dict) -> dict:
 
 
 # --------------------------------------------------------------- providers
+RETRY_WAITS = (4, 10, 25)      # seconds between attempts when the provider is busy or rate-limiting
+
+
+def _with_retry(call):
+    """Run a provider call, waiting and trying again on "busy" (503) and "slow down" (429) answers.
+
+    Those are temporary: without this a short spike in demand turns into an invoice that
+    "could not be read". Any other error is raised at once.
+    """
+    for wait in (*RETRY_WAITS, None):
+        try:
+            return call()
+        except Exception as e:  # noqa: BLE001 - each SDK has its own error classes; look at the status
+            code = getattr(e, "code", None) or getattr(e, "status_code", None)
+            if wait is None or code not in (429, 500, 503):
+                raise
+            time.sleep(wait)
+
+
 def call_gemini(text, file_bytes=None, mime=None):
     from google import genai
     from google.genai import types
@@ -138,7 +158,7 @@ def call_gemini(text, file_bytes=None, mime=None):
     parts = [user_prompt(text)]
     if file_bytes:
         parts.insert(0, types.Part.from_bytes(data=file_bytes, mime_type=mime))
-    resp = client.models.generate_content(
+    resp = _with_retry(lambda: client.models.generate_content(
         model=os.environ.get("GEMINI_MODEL", "gemini-flash-latest"),
         contents=parts,
         config=types.GenerateContentConfig(
@@ -146,7 +166,7 @@ def call_gemini(text, file_bytes=None, mime=None):
             response_mime_type="application/json",
             temperature=0,
         ),
-    )
+    ))
     um = getattr(resp, "usage_metadata", None)
     usage = {
         "input_tokens": getattr(um, "prompt_token_count", 0) or 0,

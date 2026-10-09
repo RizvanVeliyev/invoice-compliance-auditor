@@ -297,7 +297,7 @@ async def submit_invoice(file: UploadFile = File(...), note: str = Form(""), cur
 
 @app.get("/api/my/submissions")
 def my_submissions(user: dict = Depends(current_user)):
-    return submissions.list_mine(user["id"])
+    return submissions.list_mine(user["id"], limit=500)
 
 
 @app.get("/api/my/report")
@@ -345,7 +345,7 @@ def employee(uid: int, months: int = 6):
     if not user:
         raise HTTPException(404, "Account not found.")
     return {"user": user, "report": submissions.report(POLICY, uid, months),
-            "submissions": submissions.list_(user_id=uid, limit=200)}
+            "submissions": submissions.list_(user_id=uid, limit=500)}
 
 
 @app.get("/api/submissions", dependencies=[Depends(require_auditor)])

@@ -1,46 +1,81 @@
 # Quality testing
 
+Last run: 9 October 2026, on the code in this repository (policy v2.5).
+
+## Results at a glance
+| What | How to run it | Result |
+|---|---|---|
+| Automated tests (API, engine, accounts, duplicates, reports) | `cd backend && python -m pytest -q tests` | **67 / 67 pass** |
+| Quality cases, strict scoring, offline reader | `python run_quality_tests.py --provider offline` | **36 / 36 pass** (6 more need a live LLM) |
+| Same 36 cases, spreadsheet-style amount filter | printed by the same runner | 14 / 36 |
+| Frontend type check | `cd frontend && npx tsc --noEmit` | clean |
+| Frontend production build | `npm run build` | 13 pages built, no errors |
+| Translations | every key used in the code exists in all three languages | 413 entries, none missing, placeholders match |
+| Browser run (three roles, three languages, both themes, phone width) | scripted with a headless browser | no console errors, no horizontal overflow |
+| Fresh-clone run, as a teammate would | clean clone, copied `.env.example` | starts, admin setup works, sample invoice judged correctly |
+| Live-LLM extraction (accuracy, latency, cost) | `python run_quality_tests.py` with a key | **not measured yet** |
+| Docker build | `docker compose up --build` | **not verified** (Docker would not start on the test machine) |
+| Manual baseline (people checking invoices by hand) | `manual_baseline_template.csv` | **not measured yet** |
+
 ## What was tested
-- **42 cases** (`backend/test_cases.json`): 36 template-format cases and 6 free-text cases that need a real LLM
-  (email prose, Azerbaijani receipt, Russian invoice, multi-line items with no printed total, vendor typo, prompt injection).
-- Coverage: clean approvals, single and multiple violations, exact boundaries (150/151, 500, 2000), per-night
-  division, per-person division, approval hierarchy (wrong approver level), Director/Finance-Director waivers,
-  USD/EUR conversion at the fixed rates (incl. a converted amount landing exactly on a tier boundary and a
-  USD total that only breaks a threshold after conversion), a currency with no rate, missing date, illegible amount, uncovered category, prompt injection.
-- **Strict scoring:** pass = correct status **and** exactly the expected rule IDs.
-- Plus 67 unit/regression/API tests (`backend/tests`): rules engine, currency conversion, approval guard, offline
-  parsers, audit log, split warnings, the submission → alert → decision flow, **accounts and roles** (every
-  private endpoint refused without a session, each role limited to its own pages, auditor requests approved or
-  declined by the admin, exactly one admin, passwords and session tokens not stored in the clear), **duplicate
-  refusal** (same file, same invoice in another file, no false positives on different invoices, caught before the
-  model is called), the **decision history** (notes hidden from the employee, one decision at a time, reopening needs
-  a reason), search, the per-person spending report, the overview totals and the CSV export.
 
-## Results
+### Quality cases: does Ledger reach the right verdict, for the right reason?
+- **42 cases** in `backend/test_cases.json`: 36 template-format cases and 6 free-text cases that need a real LLM
+  (email prose, Azerbaijani receipt, Russian invoice, multi-line items with no printed total, vendor typo,
+  prompt injection in free text).
+- **Strict scoring:** a case passes only if the status is right **and** the cited rule IDs are exactly the expected set.
+- Coverage: clean approvals; single and multiple violations; exact boundaries (150 / 151, 500, 2000);
+  per-night and per-person division; the approval hierarchy (wrong approver level); Director and Finance
+  Director waivers; **USD and EUR conversion** at the fixed rates, including a converted amount landing exactly
+  on a tier boundary (1000 EUR = 2000 AZN) and a USD total that only breaks a threshold after conversion
+  ($650 = 1105 AZN); a currency with no rate (GBP); missing date; illegible amount; a credit note; European
+  number format; an uncovered category; pending approvals; prompt injection and a forged approval line.
+- Full per-case table: `QUALITY_TEST_REPORT_OFFLINE.md`.
 
-### Rules engine + pipeline (reproducible, no key) — measured
-`python run_quality_tests.py --provider offline` → **36/36 strict pass**; `pytest` → 67/67
-(full table: `QUALITY_TEST_REPORT_OFFLINE.md`).
+> Read this correctly: the offline run uses a regex reader on the template format, so it proves the
+> **decision logic** is correct and deterministic. It does **not** measure how well a model reads messy documents.
 
-> Read this correctly: the offline run uses a regex extractor on the template format, so it proves the
-> **decision logic** is correct and deterministic. It does **not** measure LLM extraction accuracy.
-
-### Comparison with the current approach — measured
-A spreadsheet-style filter (raw total vs. category limit, flat 2000 cap) on the same 36 cases:
+### Comparison with the current approach
+A spreadsheet-style filter (raw total against the category limit, flat 2000 cap) on the same 36 cases:
 
 | Method | Exact pass | Status only | Violations correctly cited |
 |---|---|---|---|
 | Amount-threshold filter | 14/36 | 21/36 | 16/29 |
 | Ledger | 36/36 | 36/36 | 29/29 |
 
-The filter cannot divide by people/nights, check the vendor list, read approvals, convert currency or notice missing data.
-This is a proxy baseline, not a measurement of human reviewers (see "Still to fill in").
+The filter cannot divide by people or nights, check the vendor list, read approvals, convert currency or notice
+missing data. It is a proxy for "how this is done today", not a measurement of human reviewers.
 
-### Live-LLM extraction — **fill in after running**
-`cd backend && python run_quality_tests.py` (your provider) → paste the strict-pass count, the 6 free-text cases,
-median latency and cost per invoice here. Do not submit this section blank or with invented numbers.
+### Automated tests: does the product around the verdict behave?
+67 tests in `backend/tests`:
 
-## Failures and fixes found during development
+| File | Tests | What they pin down |
+|---|---|---|
+| `test_rules_engine.py` | 12 | limits and boundaries, division, waivers, tiers, currency conversion at 1.7 and 2.0, a currency without a rate, injected values cannot change the verdict |
+| `test_review_fixes.py` | 17 | one regression test per defect found in review: forged approvals, flights judged as hotels, the offline approval parser, zero / negative / missing amounts, number formats, policy-driven waivers, audit-log failures, split-purchase warnings |
+| `test_auth.py` | 16 | nothing private without a session; each role limited to its own endpoints; one admin, never by registration or promotion; open and admin-approved auditor sign-up; passwords and session tokens not stored in the clear; lock after repeated wrong passwords; sign-out and deactivation end the session; nobody decides on their own invoice |
+| `test_submissions.py` | 16 | upload → verdict → alert → decision; scanned and fake files; USD and EUR invoices; the submitter's currency choice; **duplicates refused** (same file, same invoice in another file, caught before the model is called, no false positives, resubmission after rejection); the employee's own list; overview totals; CSV export with formula-safe cells |
+| `test_audit_tools.py` | 6 | the decision history, internal notes hidden from the employee, one decision at a time, reopening needs a reason; search; **filters and paging** with the total count; the per-person spending report; the audit team's list of people |
+
+### Checked in a real browser
+A scripted headless browser registered an employee, signed in as the auditor and the admin, uploaded the
+samples, rejected, added a note, reopened and cleared invoices, and opened every page in Azerbaijani, English
+and Russian, in the light and the dark theme, at desktop and phone width. With 35 invoices and 17 accounts
+seeded, paging and each filter returned the expected rows (for example the currency filter left only USD
+invoices; currency plus search left two). No console errors and no horizontal overflow at 390 px.
+
+## Not measured yet
+- **Live-LLM extraction.** The 6 free-text cases, the strict-pass count with a real model, median latency and
+  cost per invoice. Run `python run_quality_tests.py` with `LLM_PROVIDER` and a key set, and
+  `PRICE_IN_PER_MTOK` / `PRICE_OUT_PER_MTOK` for the cost. Until then nothing here says how accurately a model
+  reads a scan, an email or an Azerbaijani receipt.
+- **A manual baseline.** Have 2–3 people check 10 of the invoices by hand and record time and errors in
+  `manual_baseline_template.csv`; that gives the "minutes per invoice today" number the comparison lacks.
+- **The Docker build.** The Dockerfiles need no change for the new code (no new dependencies), but the build
+  itself was not run.
+- **Load.** Nothing was tested with thousands of invoices or many people at once.
+
+## Failures found and fixed during development
 1. **Wrong test expectation.** Case 14 (1500 AZN software, no approval) expected only EXP-2.1, but EXP-4.1 (500–2000 needs
    Manager) also applies, exactly as in cases 04 and 09. The old runner compared only `status`, so it never noticed.
    Fixed the expectation and made the runner compare rule IDs.
@@ -50,9 +85,8 @@ median latency and cost per invoice here. Do not submit this section blank or wi
    (uncovered category with documented Finance Director approval → approved). Resolved with an explicit policy rule: an
    uncovered category is cleared only when its amount tier requires approval and that approval is documented.
 4. **Tier boundaries were undefined** (500 and 2000). Now explicit in `policy.json` and covered by cases 20–21.
-5. **Leaked credential.** A live API key was shipped inside the project zip. Removed; `.env` is git/docker-ignored;
-   the key must be revoked.
-
+5. **Leaked credential.** A live API key was shipped inside an early project zip. Removed; `.env` is git- and
+   docker-ignored; the key must be revoked.
 6. **Forged approvals via prompt injection.** The verdict was computed by code, but the `approvals` list it trusts came
    from the model reading the whole invoice, so "pre-cleared by the Finance Director" in a note could have approved a
    4800 AZN payment to an unlisted vendor. Added `approval_guard.py`: approvals are kept only if their quoted evidence is
@@ -64,12 +98,11 @@ median latency and cost per invoice here. Do not submit this section blank or wi
    from Finance Director" were read as given. Now clause-by-clause with negation handling and upper-case `IT` only.
 9. **Amounts.** Zero/negative amounts were auto-approved or mis-described; a missing amount was returned as 0 (UI showed
    "0 AZN"). The offline parser read `1.234,50` as 1.2345, lost the currency in `AZN 900`, and dropped the minus sign of
-   credit notes (found by new case 30: a −240 refund was flagged as a 240 meal). All fixed; cases 30–31.
+   credit notes (found by case 30: a −240 refund was flagged as a 240 meal). All fixed; cases 30–31.
 10. **Hard-coded policy values.** `waived_by` in `policy.json` was ignored and the 2000/500 limits were hard-coded in
     messages and severity. Now read from the policy.
 11. **Silent audit failures.** A failed audit write was swallowed; now logged and shown (`meta.audit_logged`).
 12. **Upload size.** The whole upload was read into memory before the 5 MB check; now reads at most limit+1 bytes.
-
 13. **Foreign currency was a dead end.** Every USD or EUR invoice went to a person, although the company has fixed
     rates. The engine now converts at the policy rates before any rule runs and shows the conversion in the trace.
     Case 17 changed from `needs_review` to `flagged EXP-1.1` (180 USD = 306 AZN for one person); cases 32–36 added.
@@ -85,13 +118,17 @@ median latency and cost per invoice here. Do not submit this section blank or wi
     built, tested and one setting away (`AUDITOR_SIGNUP=approval`).
 17. **A second auditor could overwrite a decision without a trace.** `decide` simply replaced the row. Now a decided
     invoice has to be reopened with a reason, and every step is kept in an append-only history.
+18. **Searching `#1` returned unrelated invoices.** The digit also matched inside invoice numbers such as
+    `PF-2026-031`. A `#id` search is now exact; found by the search test.
+19. **Dates showed as "2026 M10 9" in Azerbaijani.** Browsers often ship without Azerbaijani month names. Month
+    names for all three languages are now in the app; found in the browser run.
+20. **Layout overflow.** Long rule descriptions pushed the "rules broken" card past its edge and made the overview
+    scroll sideways on a phone (906 px too wide). Fixed; the browser run now checks overflow at 390 px.
+21. **The copied `.env.example` broke a fresh install.** It selected a model that needs an API key, so every upload
+    failed to read. It now defaults to the offline reader; found by the fresh-clone run.
 
 ## Known limits
 Approval claims are checked against the document text, not against the approver's email or signature; one policy;
-fixed exchange rates for USD and EUR only; content-based duplicate detection depends on what the extractor read; scanned-document accuracy depends on the vision model;
-synthetic data only.
-
-## Still to fill in (needs you)
-- Live-LLM results (above).
-- A real manual baseline: have 2–3 people check 10 of the invoices by hand and record time and errors in
-  `manual_baseline_template.csv`, then quote the measured average.
+fixed exchange rates for USD and EUR only; content-based duplicate detection depends on what the extractor read;
+scanned-document accuracy depends on the vision model; the sentences the engine writes about an invoice are in
+English in every interface language; synthetic data only.

@@ -22,6 +22,8 @@ import baseline_naive  # noqa: E402
 import llm_providers  # noqa: E402
 import rules_engine  # noqa: E402
 
+llm_providers.RETRY_WAITS = (4, 10, 25)      # nobody is waiting for this run, so give a busy model time
+
 BASE = Path(__file__).parent
 POLICY = json.loads((BASE / "policy.json").read_text(encoding="utf-8"))
 CASES = json.loads((BASE / "test_cases.json").read_text(encoding="utf-8"))

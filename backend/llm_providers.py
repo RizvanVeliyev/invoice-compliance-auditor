@@ -131,7 +131,9 @@ def normalize_record(rec: dict) -> dict:
 
 
 # --------------------------------------------------------------- providers
-RETRY_WAITS = (4, 10, 25)      # seconds between attempts when the provider is busy or rate-limiting
+# Seconds between attempts when the provider is busy or rate-limiting. Short on purpose: a person is
+# waiting for the upload. The quality runner, which nobody waits for, sets longer waits.
+RETRY_WAITS = (2,)
 
 
 def _with_retry(call):
@@ -160,15 +162,27 @@ def call_gemini(text, file_bytes=None, mime=None):
     parts = [user_prompt(text)]
     if file_bytes:
         parts.insert(0, types.Part.from_bytes(data=file_bytes, mime_type=mime))
-    resp = _with_retry(lambda: client.models.generate_content(
-        model=os.environ.get("GEMINI_MODEL", "gemini-flash-latest"),
-        contents=parts,
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            response_mime_type="application/json",
-            temperature=0,
-        ),
-    ))
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPT, response_mime_type="application/json", temperature=0)
+    # When the main model is busy (503) or out of quota (429), ask the fallback model at once instead of
+    # waiting: Gemini's models have separate capacity and separate quotas.
+    models = [os.environ.get("GEMINI_MODEL", "gemini-flash-latest")]
+    fallback = os.environ.get("GEMINI_FALLBACK_MODEL", "gemini-flash-lite-latest").strip()
+    if fallback and fallback not in models:
+        models.append(fallback)
+
+    def ask():
+        last = None
+        for model in models:
+            try:
+                return client.models.generate_content(model=model, contents=parts, config=config)
+            except Exception as e:  # noqa: BLE001
+                if (getattr(e, "code", None) or getattr(e, "status_code", None)) not in (429, 500, 503):
+                    raise
+                last = e
+        raise last
+
+    resp = _with_retry(ask)
     um = getattr(resp, "usage_metadata", None)
     usage = {
         "input_tokens": getattr(um, "prompt_token_count", 0) or 0,

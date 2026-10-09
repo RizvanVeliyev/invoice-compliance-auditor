@@ -167,6 +167,9 @@ def register(email: str, name: str, role: str, password: str) -> dict:
     """Self-registration: an employee or an auditor, never the admin."""
     if role not in SIGNUP_ROLES:
         raise AuthError("Choose whether you are an employee or an auditor.")
+    want = configured_admin()
+    if (email or "").strip().lower() in {DEFAULT_ADMIN["email"], want["email"] if want else ""}:
+        raise AuthError("That address is reserved for the admin. Sign in instead.")
     if role == "auditor" and auditor_signup_needs_approval():
         return create_user(email, name, "employee", password, requested_role="auditor")
     return create_user(email, name, role, password)
@@ -219,27 +222,61 @@ def seed_auditor_from_env() -> None:
 DEFAULT_ADMIN = {"email": "admin@fiscalai.local", "password": "FiscalAI-Admin-2026", "name": "FiscalAI Admin"}
 
 
-def seed_admin_from_env() -> None:
-    """Create the admin on first start: from ADMIN_EMAIL / ADMIN_PASSWORD, otherwise the built-in default.
-
-    Nothing happens once an admin exists. DEFAULT_ADMIN=off switches the built-in account off,
-    which brings back the one-time setup form.
-    """
-    if has_admin():
-        return
-    email, password = os.environ.get("ADMIN_EMAIL", "").strip(), os.environ.get("ADMIN_PASSWORD", "")
+def configured_admin() -> dict | None:
+    """The admin this installation is meant to have: ADMIN_EMAIL / ADMIN_PASSWORD, otherwise the built-in one."""
+    email, password = os.environ.get("ADMIN_EMAIL", "").strip().lower(), os.environ.get("ADMIN_PASSWORD", "")
     name = os.environ.get("ADMIN_NAME", "").strip()
-    if not (email and password):
-        if os.environ.get("DEFAULT_ADMIN", "on").strip().lower() in {"off", "0", "false", "no"}:
-            return
-        email, password, name = DEFAULT_ADMIN["email"], DEFAULT_ADMIN["password"], name or DEFAULT_ADMIN["name"]
-        log.warning("Created the built-in admin %s with the published default password. "
-                    "Set ADMIN_EMAIL and ADMIN_PASSWORD before putting this on the internet.", email)
+    if email and password:
+        return {"email": email, "password": password, "name": name or "Administrator", "builtin": False}
+    if os.environ.get("DEFAULT_ADMIN", "on").strip().lower() in {"off", "0", "false", "no"}:
+        return None
+    return {**DEFAULT_ADMIN, "name": name or DEFAULT_ADMIN["name"], "builtin": True}
+
+
+def seed_admin_from_env() -> None:
+    """Make sure, on every start, that the configured admin exists and can sign in.
+
+    The configuration is the source of truth: the single admin account is created if it is missing and
+    repaired if its email, password, role or active flag differ (an old database, a forgotten password,
+    a changed setting). So the admin sign-in shown in the README, or set on the host, always works after
+    a restart, and nobody ever has to register an admin. With DEFAULT_ADMIN=off and no ADMIN_EMAIL /
+    ADMIN_PASSWORD nothing is touched and the one-time setup form is used instead.
+    """
+    want = configured_admin()
+    if not want:
+        return
     try:
-        create_user(email, name or "Administrator", "admin", password)
-        log.info("Created the admin account %s.", email.lower())
+        _clean(want["email"], want["name"], "admin", want["password"])
     except AuthError as e:
-        log.error("ADMIN_EMAIL / ADMIN_PASSWORD could not be used: %s", e)
+        log.error("The admin settings could not be used: %s", e)
+        return
+    con = _db()
+    try:
+        current = con.execute("SELECT * FROM users WHERE role='admin' ORDER BY id LIMIT 1").fetchone()
+        same_email = con.execute("SELECT * FROM users WHERE email=?", (want["email"],)).fetchone()
+        target = same_email or current                      # reuse the account with that address, else the admin
+        if target is None:
+            with con:
+                con.execute(
+                    "INSERT INTO users (email, name, role, password_hash, active, created_at) VALUES (?,?,?,?,1,?)",
+                    (want["email"], want["name"], "admin", hash_password(want["password"]), _iso(_now())))
+            log.info("Created the admin account %s.", want["email"])
+        else:
+            with con:
+                # There is one admin: if another account holds the role, it steps down to auditor.
+                con.execute("UPDATE users SET role='auditor' WHERE role='admin' AND id<>?", (target["id"],))
+                if not verify_password(want["password"], target["password_hash"]):
+                    con.execute("UPDATE users SET password_hash=? WHERE id=?",
+                                (hash_password(want["password"]), target["id"]))
+                    con.execute("DELETE FROM sessions WHERE user_id=?", (target["id"],))
+                    log.info("Reset the admin password of %s from the configuration.", want["email"])
+                con.execute("UPDATE users SET email=?, role='admin', active=1, requested_role=NULL WHERE id=?",
+                            (want["email"], target["id"]))
+        if want["builtin"]:
+            log.warning("The admin is the built-in %s with the published default password. "
+                        "Set ADMIN_EMAIL and ADMIN_PASSWORD before putting this on the internet.", want["email"])
+    finally:
+        con.close()
 
 
 def list_users() -> list[dict]:

@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import llm_providers
+import offline_extractor
 import rules_engine
 
 DB_PATH = Path(os.environ.get("AUDIT_DB_PATH", Path(__file__).parent / "data" / "audit.db"))
@@ -129,6 +130,33 @@ def pdf_text(data: bytes) -> str:
     return "\n".join((p.extract_text() or "") for p in reader.pages).strip()
 
 
+TEMPLATE_FIELDS = ("vendor", "amount", "category", "date")
+
+
+def _extract(text, file_bytes, mime, provider):
+    """Read the invoice's fields. Returns (record, usage, provider name, note for the auditor or None).
+
+    Text in the 'Field: value' layout is complete without a model, so it is read locally: instant, free,
+    and it spends none of the model's quota. Everything else (free text, other languages, scans, photos)
+    goes to the model. If the model cannot be reached and there is text, the built-in reader is used
+    rather than losing the invoice, and the auditor is told the fields need a look.
+    """
+    wants_model = provider is None and os.environ.get("LLM_PROVIDER", "offline").lower() != "offline"
+    if text is not None and wants_model and os.environ.get("FAST_TEMPLATE_READ", "on").lower() != "off":
+        probe = offline_extractor.extract(text)
+        if all(probe.get(k) not in (None, "") for k in TEMPLATE_FIELDS):
+            return (*llm_providers.extract_invoice(text, provider="offline"), None)
+    try:
+        return (*llm_providers.extract_invoice(text, file_bytes, mime, provider), None)
+    except Exception as e:  # noqa: BLE001
+        if text is None or not wants_model:
+            raise
+        log.warning("Model unavailable (%s); reading the text with the built-in reader.", str(e)[:120])
+        return (*llm_providers.extract_invoice(text, provider="offline"),
+                "The AI model could not be reached, so the fields were read by the built-in reader. "
+                "Check them against the document.")
+
+
 def analyze(policy: dict, text: str | None = None, file_bytes: bytes | None = None,
             mime: str | None = None, provider: str | None = None, default_currency: str | None = None) -> dict:
     """`default_currency` is what the submitter selected: it is used only when the document
@@ -150,7 +178,7 @@ def analyze(policy: dict, text: str | None = None, file_bytes: bytes | None = No
         else:
             raise ValueError(f"Unsupported file type: {mime}")
 
-    record, usage, prov = llm_providers.extract_invoice(text, file_bytes, mime, provider)
+    record, usage, prov, reader_note = _extract(text, file_bytes, mime, provider)
     printed = record.get("currency") or ""
     if default_currency and not printed:
         record["currency"], record["currency_source"] = default_currency, "submitter"
@@ -168,6 +196,8 @@ def analyze(policy: dict, text: str | None = None, file_bytes: bytes | None = No
     }
     sha = hashlib.sha256(raw).hexdigest()
     result["history_warnings"] = history_warnings(policy, result, sha)
+    if reader_note:
+        result["history_warnings"].append(reader_note)
     if default_currency and printed and printed != default_currency:
         result["history_warnings"].append(
             f"The submitter selected {default_currency}, but the invoice is priced in {printed}. "

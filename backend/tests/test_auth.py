@@ -178,11 +178,12 @@ def test_admin_can_be_seeded_from_the_environment(monkeypatch, tmp_path):
     monkeypatch.setenv("ADMIN_PASSWORD", PASSWORD)
     auth.seed_admin_from_env()
     auth.seed_admin_from_env()                                              # second start: nothing new
-    monkeypatch.setenv("ADMIN_EMAIL", "other@nordvik.test")
-    auth.seed_admin_from_env()                                              # a changed .env never adds a second admin
     users = auth.list_users()
     assert [(u["email"], u["role"]) for u in users] == [("root@nordvik.test", "admin")]
     assert auth.authenticate("root@nordvik.test", PASSWORD)["id"] == users[0]["id"]
+    monkeypatch.setenv("ADMIN_EMAIL", "other@nordvik.test")
+    auth.seed_admin_from_env()                                              # a changed setting renames the one admin
+    assert [(u["email"], u["role"]) for u in auth.list_users()] == [("other@nordvik.test", "admin")]
 
 
 def test_auditor_cannot_decide_on_their_own_invoice(client, as_, submit):
@@ -307,3 +308,45 @@ def test_the_sign_in_side_must_match_the_account(client, monkeypatch):
     waiting = client.post("/api/auth/login", json={"email": "leyla@nordvik.test", "password": PASSWORD, "side": "auditor"})
     assert waiting.status_code == 403 and "not approved yet" in waiting.json()["detail"]
     assert login("leyla@nordvik.test", "employee")[0] == 200
+
+
+def test_the_configured_admin_always_works_after_a_restart(monkeypatch, tmp_path):
+    """An old database, a forgotten password, a deactivated or demoted admin: a restart repairs all of them."""
+    monkeypatch.setattr(service, "DB_PATH", tmp_path / "old.db")
+    monkeypatch.setattr(auth, "SCRYPT_N", 2 ** 8)
+    monkeypatch.setattr(auth, "_fails", {})
+    for name in ("ADMIN_EMAIL", "ADMIN_PASSWORD", "ADMIN_NAME", "DEFAULT_ADMIN"):
+        monkeypatch.delenv(name, raising=False)
+    old = auth.create_user("someone@old.test", "Old Admin", "admin", "an-old-password")     # made by the old setup form
+    emp = auth.create_user("murad@nordvik.test", "Murad", "employee", PASSWORD)
+
+    auth.seed_admin_from_env()                                              # a restart with no admin settings
+    me = auth.authenticate("admin@fiscalai.local", "FiscalAI-Admin-2026")
+    assert me["id"] == old["id"] and me["role"] == "admin"                  # the same single admin, now reachable
+    assert [u["role"] for u in auth.list_users()].count("admin") == 1
+    assert auth.get_user(emp["id"])["role"] == "employee"                   # nobody else is touched
+
+    con = auth._db()
+    with con:
+        con.execute("UPDATE users SET active=0, password_hash=? WHERE id=?", ("broken", old["id"]))
+    con.close()
+    auth.seed_admin_from_env()
+    assert auth.authenticate("admin@fiscalai.local", "FiscalAI-Admin-2026")["active"] is True
+
+    monkeypatch.setenv("ADMIN_EMAIL", "boss@nordvik.test")                  # the host now sets its own admin
+    monkeypatch.setenv("ADMIN_PASSWORD", PASSWORD)
+    auth.seed_admin_from_env()
+    assert auth.authenticate("boss@nordvik.test", PASSWORD)["id"] == old["id"]
+    try:
+        auth.authenticate("admin@fiscalai.local", "FiscalAI-Admin-2026")
+    except auth.AuthError:
+        pass
+    else:
+        raise AssertionError("the published default still worked after the host set its own admin")
+
+
+def test_the_admin_address_cannot_be_registered(client, monkeypatch):
+    monkeypatch.delenv("ADMIN_EMAIL", raising=False)
+    r = client.post("/api/auth/register", json={"name": "Sneaky", "email": "Admin@FiscalAI.local",
+                                                "password": "first-pass-1", "role": "employee"})
+    assert r.status_code == 400 and "reserved for the admin" in r.json()["detail"]

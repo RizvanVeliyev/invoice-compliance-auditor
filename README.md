@@ -31,9 +31,12 @@ Open http://localhost:3000/login and sign in as the admin that every fresh insta
 Then register an employee and an auditor (two browser windows) and upload one of the sample invoices offered
 on the Submit page. The same admin exists whether you start FiscalAI with Docker or without it.
 
+Nobody registers the admin: the server makes sure this account exists and can sign in every time it starts,
+on a new database or an old one. The admin signs in on the same page as everyone else, on either tab.
+
 > This password is public. For anything reachable from the internet set your own `ADMIN_EMAIL` and
-> `ADMIN_PASSWORD` in `backend/.env` (or the host's environment settings) before the first start; the built-in
-> account is then never created.
+> `ADMIN_PASSWORD` in `backend/.env` (or the host's environment settings, for example on Render). **When those
+> two are set, they are the admin sign-in and the built-in one above stops working** after the next restart.
  Without an API key FiscalAI reads the sample
 PDFs with its built-in reader and every feature works; add a Gemini, Claude or GPT key in `backend/.env` to
 read real scans, photos and free text. Full instructions are under [Run it](#run-it).

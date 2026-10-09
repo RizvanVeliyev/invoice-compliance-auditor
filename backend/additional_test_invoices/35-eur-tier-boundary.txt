@@ -1,0 +1,10 @@
+EXPENSE RECORD
+
+Invoice No: SL-60017
+Vendor: SkyLine Travel Agency
+Date: 2026-10-12
+Employee: Leyla Mammadova
+Category: Travel
+Description: Return flight Baku - Vienna
+Amount: 1000 EUR
+Approval: Approved by Manager Rauf Ismayilov

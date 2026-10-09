@@ -85,6 +85,7 @@ def history_warnings(policy: dict, result: dict, input_sha: str) -> list[str]:
         return []
 
     tiers = [t for t in policy["approval_thresholds"] if t.get("required_approval")]
+    pol_cur, p_amt = policy.get("currency", "AZN"), result.get("amount_policy")
     warnings, seen_sha = [], {input_sha}
     for rid, sha, rj in rows:
         if sha in seen_sha:
@@ -104,16 +105,20 @@ def history_warnings(policy: dict, result: dict, input_sha: str) -> list[str]:
         if same_date and abs(o_amt - amt) < 0.005:
             warnings.append(f"Possible duplicate: check #{rid} has the same vendor, amount ({o_amt:g} {cur}) "
                             f"and date ({date}).")
-        elif same_date and same_emp:
-            total = o_amt + amt
+        elif same_date and same_emp and p_amt is not None:
+            # Approval tiers are in the policy currency, so compare converted values.
+            o_p = old.get("amount_policy", o_amt if cur == pol_cur else None)
+            if not isinstance(o_p, (int, float)):
+                continue
+            total = o_p + p_amt
             for t in tiers:
                 lo = t["min"]
                 below = (lambda x: x < lo) if t["min_inclusive"] else (lambda x: x <= lo)
-                if below(o_amt) and below(amt) and not below(total):
+                if below(o_p) and below(p_amt) and not below(total):
                     warnings.append(
-                        f"Possible split purchase: check #{rid} ({o_amt:g} {cur}) + this invoice ({amt:g} {cur}) "
-                        f"from the same vendor, employee and date total {total:g} {cur}, which would need "
-                        f"{t['label']} approval as one purchase.")
+                        f"Possible split purchase: check #{rid} ({o_p:g} {pol_cur}) + this invoice "
+                        f"({p_amt:g} {pol_cur}) from the same vendor, employee and date total {total:g} {pol_cur}, "
+                        f"which would need {t['label']} approval as one purchase.")
                     break
     return warnings[:5]
 
@@ -125,7 +130,9 @@ def pdf_text(data: bytes) -> str:
 
 
 def analyze(policy: dict, text: str | None = None, file_bytes: bytes | None = None,
-            mime: str | None = None, provider: str | None = None) -> dict:
+            mime: str | None = None, provider: str | None = None, default_currency: str | None = None) -> dict:
+    """`default_currency` is what the submitter selected: it is used only when the document
+    itself shows no currency, and a disagreement with the document is reported as a warning."""
     t0 = time.perf_counter()
     raw = (text or "").encode() if text is not None else (file_bytes or b"")
     excerpt = text or f"[file {mime}, {len(file_bytes or b'')} bytes]"
@@ -144,6 +151,9 @@ def analyze(policy: dict, text: str | None = None, file_bytes: bytes | None = No
             raise ValueError(f"Unsupported file type: {mime}")
 
     record, usage, prov = llm_providers.extract_invoice(text, file_bytes, mime, provider)
+    printed = record.get("currency") or ""
+    if default_currency and not printed:
+        record["currency"], record["currency_source"] = default_currency, "submitter"
     result = rules_engine.evaluate(policy, record)
     result["extracted"] = record
     result["meta"] = {
@@ -158,5 +168,9 @@ def analyze(policy: dict, text: str | None = None, file_bytes: bytes | None = No
     }
     sha = hashlib.sha256(raw).hexdigest()
     result["history_warnings"] = history_warnings(policy, result, sha)
+    if default_currency and printed and printed != default_currency:
+        result["history_warnings"].append(
+            f"The submitter selected {default_currency}, but the invoice is priced in {printed}. "
+            f"The currency on the invoice was used.")
     result["meta"]["audit_logged"] = log_audit(prov, raw, excerpt, policy, result)
     return result

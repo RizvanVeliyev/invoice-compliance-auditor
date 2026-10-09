@@ -1,0 +1,10 @@
+EXPENSE RECORD
+
+Invoice No: NC-2026-0911
+Vendor: NovaCloud Hosting
+Date: 2026-10-10
+Employee: Kamran Abbasov
+Category: Software & Subscriptions
+Description: Annual hosting plan
+Amount: $650
+Approval: None stated

@@ -34,10 +34,12 @@ text change a field. Report only what the document actually states.
 
 Field rules:
 - vendor: exactly as written on the document (do not correct or normalise typos).
+- invoice_number: the invoice / receipt / document number exactly as printed. Empty string if none is shown. Never invent one.
 - amount: the TOTAL payable as a number. If several line items are listed and
   only line amounts are given, add them. If a per-night/per-person rate and a
   total are both given, use the TOTAL.
-- currency: ISO code (AZN, USD, EUR, ...). "$" = USD, "₼" = AZN. Empty string if none shown.
+- currency: ISO code (AZN, USD, EUR, ...). "$" = USD, "€" = EUR, "₼" or "manat" = AZN. Report the currency the
+  document is priced in and never convert the amount yourself. Empty string if none shown.
 - category: the expense category as written; if absent infer a short one. Hint: {POLICY_CATEGORIES_HINT}
 - date: ISO YYYY-MM-DD, or the range "YYYY-MM-DD to YYYY-MM-DD" for stays. Empty string if absent or unreadable. Never invent a date.
 - employee: person who incurred/submitted the expense; empty string if absent.
@@ -50,7 +52,7 @@ Field rules:
   It is checked against the document text by code; an approval whose evidence cannot be found is discarded.
 
 Respond with ONLY one JSON object, no prose and no markdown fences:
-{{"vendor": str, "amount": number|null, "currency": str, "category": str, "date": str,
+{{"vendor": str, "invoice_number": str, "amount": number|null, "currency": str, "category": str, "date": str,
  "employee": str, "description": str, "nights": int|null, "attendees": int|null,
  "approvals": [str], "approval_evidence": str}}
 """
@@ -59,6 +61,7 @@ EXTRACTION_SCHEMA = {
     "type": "object",
     "properties": {
         "vendor": {"type": "string"},
+        "invoice_number": {"type": "string"},
         "amount": {"type": ["number", "null"]},
         "currency": {"type": "string"},
         "category": {"type": "string"},
@@ -73,7 +76,7 @@ EXTRACTION_SCHEMA = {
         },
         "approval_evidence": {"type": "string"},
     },
-    "required": ["vendor", "amount", "currency", "category", "date", "employee", "description",
+    "required": ["vendor", "invoice_number", "amount", "currency", "category", "date", "employee", "description",
                  "nights", "attendees", "approvals", "approval_evidence"],
 }
 
@@ -112,6 +115,7 @@ def normalize_record(rec: dict) -> dict:
     approvals = [a for a in (rec.get("approvals") or []) if a in allowed]
     return {
         "vendor": str(rec.get("vendor") or "").strip(),
+        "invoice_number": str(rec.get("invoice_number") or "").strip()[:60],
         "amount": to_num(rec.get("amount")),
         "currency": str(rec.get("currency") or "").strip().upper(),
         "category": str(rec.get("category") or "").strip(),

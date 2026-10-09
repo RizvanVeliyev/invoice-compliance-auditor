@@ -1,46 +1,54 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Stamp from "@/components/Stamp";
-import { api, money, SubmissionReceipt } from "@/lib/api";
+import { api, ApiError, moneyConverted, SubmissionReceipt } from "@/lib/api";
+import { Guard, useAuth } from "@/lib/auth";
+import { DICT } from "@/lib/dict";
+import { useI18n } from "@/lib/i18n";
 
 type Sample = { name: string; label: string };
+type Policy = { currency: string; accepted_currencies?: string[]; fx_rates?: Record<string, number> | null };
 const ACCEPT = "application/pdf,image/png,image/jpeg,image/webp";
 const MAX = 5 * 1024 * 1024;
 
-export default function SubmitPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+function SubmitForm() {
+  const { user } = useAuth();
+  const { t } = useI18n();
   const [note, setNote] = useState("");
+  const [currency, setCurrency] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [duplicate, setDuplicate] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<SubmissionReceipt | null>(null);
   const [samples, setSamples] = useState<Sample[]>([]);
+  const [policy, setPolicy] = useState<Policy | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const result = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api<Sample[]>("/api/sample-pdfs").then(setSamples).catch(() => setSamples([]));
-    try {
-      setName(localStorage.getItem("ledger.name") || "");
-      setEmail(localStorage.getItem("ledger.email") || "");
-    } catch {
-      /* no storage: fields start empty */
-    }
+    api<Policy>("/api/policy").then(setPolicy).catch(() => setPolicy(null));
   }, []);
+
+  const base = policy?.currency || "AZN";
+  const currencies = policy?.accepted_currencies || [base];
+  const rates = Object.entries(policy?.fx_rates || {});
 
   function pick(f: File | undefined | null) {
     setError(null);
+    setDuplicate(null);
     setReceipt(null);
     if (!f) return;
     if (!ACCEPT.split(",").includes(f.type) && !f.name.toLowerCase().endsWith(".pdf")) {
-      setError(`${f.name} isn't a PDF or an image. Export the invoice as PDF and try again.`);
+      setError(t("submit.e_type", { name: f.name }));
       return;
     }
     if (f.size > MAX) {
-      setError(`${f.name} is ${(f.size / 1048576).toFixed(1)} MB. The limit is 5 MB.`);
+      setError(t("submit.e_size", { name: f.name, mb: (f.size / 1048576).toFixed(1) }));
       return;
     }
     setFile(f);
@@ -54,60 +62,53 @@ export default function SubmitPage() {
       const blob = await res.blob();
       pick(new File([blob], s.name, { type: "application/pdf" }));
     } catch {
-      setError("The sample couldn't be loaded. Check that the backend is running.");
+      setError(t("submit.e_sample"));
     }
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
-      setError("Add your invoice PDF first.");
-      return;
-    }
-    if (!name.trim()) {
-      setError("Enter your name so the audit team knows who sent the invoice.");
+      setError(t("submit.e_nofile"));
       return;
     }
     setBusy(true);
     setError(null);
+    setDuplicate(null);
     setReceipt(null);
-    try {
-      localStorage.setItem("ledger.name", name);
-      localStorage.setItem("ledger.email", email);
-    } catch {
-      /* ignore */
-    }
     const form = new FormData();
     form.append("file", file);
-    form.append("employee_name", name);
-    form.append("employee_email", email);
     form.append("note", note);
+    form.append("currency", currency);
     try {
       const r = await api<SubmissionReceipt>("/api/submissions", { method: "POST", body: form });
       setReceipt(r);
-      setTimeout(() => result.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "The invoice couldn't be sent.");
+      // 409: the server refused the upload because this invoice is already in Ledger.
+      if (err instanceof ApiError && err.status === 409) setDuplicate(err.message);
+      else setError(err instanceof Error ? err.message : t("submit.e_send"));
     } finally {
       setBusy(false);
+      setTimeout(() => result.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
     }
   }
 
   function reset() {
     setFile(null);
     setReceipt(null);
+    setDuplicate(null);
     setNote("");
     setError(null);
   }
 
+  const message = (r: SubmissionReceipt) =>
+    t(r.status === "approved" && !r.sent_to_audit ? "submit.msg_ok" : r.status === "flagged" ? "submit.msg_flagged" : "submit.msg_review");
+
   return (
     <div className="page submit-page">
       <header className="page-head">
-        <h1>Submit an invoice</h1>
-        <p className="lede">
-          Send the invoice for an expense you paid or want paid. It is checked against the expense policy in a few
-          seconds, and anything that needs a closer look goes to the audit team.
-        </p>
+        <h1>{t("nav.submit")}</h1>
+        <p className="lede">{t("submit.lede")}</p>
       </header>
 
       <div className="submit-grid">
@@ -145,14 +146,12 @@ export default function SubmitPage() {
               {file ? (
                 <>
                   <span className="tray-title">{file.name}</span>
-                  <span className="tray-hint">
-                    {(file.size / 1024).toFixed(0)} KB. Choose a different file or drop one here to replace it.
-                  </span>
+                  <span className="tray-hint">{t("submit.replace", { kb: (file.size / 1024).toFixed(0) })}</span>
                 </>
               ) : (
                 <>
-                  <span className="tray-title">Drop your invoice PDF here</span>
-                  <span className="tray-hint">or click to choose a file. PDF, PNG, JPEG or WEBP up to 5 MB.</span>
+                  <span className="tray-title">{t("submit.drop")}</span>
+                  <span className="tray-hint">{t("submit.drop_hint")}</span>
                 </>
               )}
             </label>
@@ -160,11 +159,11 @@ export default function SubmitPage() {
 
           {samples.length > 0 && !file && (
             <div className="samples">
-              <span className="samples-label">No invoice to hand? Try one of these:</span>
+              <span className="samples-label">{t("submit.samples")}</span>
               <div className="chips">
                 {samples.map((s) => (
                   <button type="button" key={s.name} className="chip" onClick={() => loadSample(s)}>
-                    {s.label}
+                    {`sample.${s.name}` in DICT ? t(`sample.${s.name}`) : s.label}
                   </button>
                 ))}
               </div>
@@ -172,28 +171,34 @@ export default function SubmitPage() {
           )}
 
           <div className="row-2">
+            <div className="fld">
+              <span>{t("submit.by")}</span>
+              <p className="readonly">
+                {user?.name}
+                <span className="muted"> ({user?.email})</span>
+              </p>
+            </div>
             <label className="fld">
-              <span>Your name</span>
-              <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
-            </label>
-            <label className="fld">
-              <span>Work email (optional)</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-              />
+              <span>{t("submit.currency")}</span>
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                <option value="">{t("submit.currency_auto")}</option>
+                {currencies.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
+          <p className="hint">
+            {t("submit.accepts", { list: currencies.join(", ") })}{" "}
+            {rates.length > 0 &&
+              t("submit.rates", { cur: base, rates: rates.map(([c, r]) => `1 ${c} = ${r} ${base}`).join(", ") })}{" "}
+            {t("submit.currency_only")}
+          </p>
           <label className="fld">
-            <span>Note for the audit team (optional)</span>
-            <textarea
-              rows={3}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="For example: client visit to Ganja, booked by the travel agency."
-            />
+            <span>{t("submit.note")}</span>
+            <textarea rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("submit.note_ph")} />
           </label>
 
           {error && (
@@ -203,37 +208,59 @@ export default function SubmitPage() {
           )}
 
           <button className="btn btn-primary btn-wide" disabled={busy}>
-            {busy ? "Checking your invoice…" : "Send invoice"}
+            {t(busy ? "submit.sending" : "submit.send")}
           </button>
         </form>
 
         <div className="submit-side" ref={result} aria-live="polite">
-          {!busy && !receipt && (
+          {!busy && !receipt && !duplicate && (
             <div className="sheet sheet-empty">
-              <p>Your result will appear here once you send the invoice.</p>
+              <p>{t("submit.empty")}</p>
               <ul className="expect">
                 <li>
-                  <Stamp kind="approved" size="sm" /> Passed to Finance for payment
+                  <Stamp kind="approved" size="sm" /> {t("submit.x_ok")}
                 </li>
                 <li>
-                  <Stamp kind="flagged" size="sm" /> A rule is broken; the audit team is alerted
+                  <Stamp kind="flagged" size="sm" /> {t("submit.x_flag")}
                 </li>
                 <li>
-                  <Stamp kind="needs_review" size="sm" /> A person needs to check something
+                  <Stamp kind="needs_review" size="sm" /> {t("submit.x_review")}
                 </li>
               </ul>
+              <p className="hint">
+                {t("submit.follow")} <Link href="/my">{t("nav.my")}</Link>.
+              </p>
             </div>
           )}
 
           {busy && (
-            <div className="sheet sheet-scanning" aria-label="Checking your invoice">
+            <div className="sheet sheet-scanning" aria-label={t("submit.sending")}>
               <div className="ghost-lines" aria-hidden>
                 {Array.from({ length: 9 }).map((_, i) => (
                   <span key={i} style={{ width: `${55 + ((i * 37) % 40)}%` }} />
                 ))}
               </div>
               <div className="beam beam-loop" aria-hidden />
-              <p className="scan-caption">Reading {file?.name} and checking it against 5 policy rules…</p>
+              <p className="scan-caption">{t("submit.scan", { file: file?.name })}</p>
+            </div>
+          )}
+
+          {duplicate && !busy && (
+            <div className="sheet receipt receipt-duplicate" role="alert">
+              <div className="receipt-stamp">
+                <Stamp kind="duplicate" size="lg" sub={t("stamp.not_accepted")} />
+              </div>
+              <p className="receipt-ref fig">{file?.name}</p>
+              <p className="receipt-msg">{t("submit.dup")}</p>
+              <p>{duplicate}</p>
+              <div className="cta-row">
+                <Link href="/my" className="btn btn-primary">
+                  {t("submit.see_my")}
+                </Link>
+                <button className="btn btn-ghost" onClick={reset}>
+                  {t("submit.different")}
+                </button>
+              </div>
             </div>
           )}
 
@@ -243,30 +270,35 @@ export default function SubmitPage() {
                 <Stamp
                   kind={receipt.status}
                   size="lg"
-                  sub={receipt.sent_to_audit ? "Sent to audit" : "Cleared"}
+                  sub={t(receipt.sent_to_audit ? "stamp.sent_to_audit" : "stamp.cleared")}
                   key={receipt.id}
                 />
               </div>
-              <p className="receipt-ref fig">Submission #{receipt.id}</p>
-              <p className="receipt-msg">{receipt.message}</p>
+              <p className="receipt-ref fig">{t("submit.ref", { id: receipt.id })}</p>
+              <p className="receipt-msg">{message(receipt)}</p>
 
               <dl className="fields">
                 {[
-                  ["Vendor", receipt.vendor || "—"],
-                  ["Amount", money(receipt.amount, receipt.currency)],
-                  ["Category", receipt.category || "—"],
-                  ["Date", receipt.date || "—"],
+                  ["f.vendor", receipt.vendor || "—"],
+                  ["f.amount", moneyConverted(receipt.amount, receipt.currency, receipt.conversion)],
+                  ["f.category", receipt.category || "—"],
+                  ["f.date", receipt.date || "—"],
                 ].map(([k, v]) => (
                   <div className="field" key={k}>
-                    <dt>{k}</dt>
-                    <dd className={k === "Amount" ? "fig" : undefined}>{v}</dd>
+                    <dt>{t(k)}</dt>
+                    <dd className={k === "f.amount" ? "fig" : undefined}>{v}</dd>
                   </div>
                 ))}
               </dl>
+              {receipt.conversion && (
+                <p className="hint">
+                  {t("submit.fx", { from: receipt.conversion.from, rate: receipt.conversion.rate, to: receipt.conversion.to })}
+                </p>
+              )}
 
               {receipt.violations.length > 0 && (
                 <section className="block">
-                  <h3>What breaks the policy</h3>
+                  <h3>{t("submit.breaks")}</h3>
                   <ol className="findings">
                     {receipt.violations.map((v) => (
                       <li key={v.rule_id} className={`finding sev-${v.severity}`}>
@@ -281,7 +313,7 @@ export default function SubmitPage() {
               )}
               {(receipt.review_reasons.length > 0 || receipt.warnings.length > 0) && (
                 <section className="block">
-                  <h3>Why a person will look at it</h3>
+                  <h3>{t("submit.why")}</h3>
                   <ul className="reasons">
                     {[...receipt.review_reasons, ...receipt.warnings].map((x, i) => (
                       <li key={i}>{x}</li>
@@ -289,13 +321,26 @@ export default function SubmitPage() {
                   </ul>
                 </section>
               )}
-              <button className="btn btn-ghost" onClick={reset}>
-                Submit another invoice
-              </button>
+              <div className="cta-row">
+                <button className="btn btn-ghost" onClick={reset}>
+                  {t("submit.another")}
+                </button>
+                <Link href="/my" className="btn btn-ghost">
+                  {t("nav.my")}
+                </Link>
+              </div>
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SubmitPage() {
+  return (
+    <Guard>
+      <SubmitForm />
+    </Guard>
   );
 }

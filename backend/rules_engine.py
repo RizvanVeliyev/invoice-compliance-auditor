@@ -8,9 +8,14 @@ extraction always yields the same verdict, every number is reproducible, and a
 prompt-injected invoice cannot talk its way to "approved".
 
 Extracted record (see EXTRACTION_FIELDS):
-    vendor, amount, currency, category, date, employee, description,
-    nights, attendees, approvals (list of manager|it|director|finance_director),
+    vendor, invoice_number, amount, currency, category, date, employee,
+    description, nights, attendees,
+    approvals (list of manager|it|director|finance_director),
     approval_evidence (verbatim text that supports the approvals)
+
+Currency: limits are in the policy currency (AZN). Amounts in a currency listed
+in policy.json `fx_rates` are converted at that fixed rate before any rule runs;
+the result keeps the original amount and reports the conversion.
 """
 
 from __future__ import annotations
@@ -20,7 +25,7 @@ import re
 from typing import Any
 
 EXTRACTION_FIELDS = [
-    "vendor", "amount", "currency", "category", "date", "employee",
+    "vendor", "invoice_number", "amount", "currency", "category", "date", "employee",
     "description", "nights", "attendees", "approvals", "approval_evidence",
 ]
 
@@ -40,7 +45,7 @@ def _waived(rule: dict, approvals: list[str]) -> bool:
 
 
 def _high_value_threshold(policy: dict) -> float | None:
-    """Amount above which the top approval tier applies (2000 AZN in v2.4), read from policy."""
+    """Amount above which the top approval tier applies (2000 AZN today), read from policy."""
     mins = [t["min"] for t in policy["approval_thresholds"] if t.get("required_approval")]
     return max(mins) if mins else None
 
@@ -79,6 +84,15 @@ def _severity(over_ratio: float | None = None, high: bool = False) -> str:
     if over_ratio >= 0.15:
         return "medium"
     return "low"
+
+
+def fx_rate(policy: dict, currency: str | None) -> float | None:
+    """Policy-currency value of one unit of `currency`; None if the policy has no rate for it."""
+    cur = (currency or "").strip().upper()
+    if not cur or cur == policy.get("currency", "AZN"):
+        return 1.0
+    rate = (policy.get("fx_rates") or {}).get(cur)
+    return float(rate) if rate else None
 
 
 def _tier_for(policy: dict, amount: float) -> dict | None:
@@ -139,14 +153,29 @@ def evaluate(policy: dict, ext: dict[str, Any]) -> dict[str, Any]:
             f"are not expense claims this policy covers; amount-based rules were not evaluated."
         )
         amount_usable = False
-    if amount_usable and currency and currency != pol_cur and not policy.get("fx_rates"):
-        review.append(
-            f"Invoice is in {currency} but policy limits are in {pol_cur} and no exchange rate "
-            f"is defined; amount-based rules were not evaluated."
-        )
-        amount_usable = False
+    # From here on `amount` is in the policy currency; the invoice's own figure is kept for the result.
+    invoice_amount = amount
+    conversion = None
+    if amount_usable and currency and currency != pol_cur:
+        rate = fx_rate(policy, currency)
+        if rate is None:
+            accepted = ", ".join(policy.get("accepted_currencies") or [pol_cur])
+            review.append(
+                f"Invoice is in {currency}, but the policy accepts {accepted} only and defines no exchange "
+                f"rate for {currency}; amount-based rules were not evaluated."
+            )
+            amount_usable = False
+        else:
+            amount = round(amount * rate, 2)
+            conversion = {"from": currency, "to": pol_cur, "rate": rate,
+                          "amount": invoice_amount, "converted": amount}
+            trace.append({"rule_id": "FX", "result": "info",
+                          "calc": f"{_fmt(invoice_amount)} {currency} x {rate:g} = {_fmt(amount)} {pol_cur} "
+                                  f"(fixed policy rate)"})
     if amount_usable and not currency:
         assumptions.append(f"No currency stated; assumed {pol_cur}.")
+    elif amount_usable and ext.get("currency_source") == "submitter":
+        assumptions.append(f"No currency is printed on the invoice; {currency} selected by the submitter was used.")
 
     nights = ext.get("nights")
     attendees = ext.get("attendees")
@@ -165,7 +194,7 @@ def evaluate(policy: dict, ext: dict[str, Any]) -> dict[str, Any]:
                 trace.append({"rule_id": rid, "result": "n/a", "calc": f"Category is not {rule['category']}."})
                 continue
             if not amount_usable:
-                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or foreign currency."})
+                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or in a currency the policy does not accept."})
                 continue
             n = attendees if isinstance(attendees, int) and attendees > 0 else None
             if n is None:
@@ -192,7 +221,7 @@ def evaluate(policy: dict, ext: dict[str, Any]) -> dict[str, Any]:
                 trace.append({"rule_id": rid, "result": "n/a", "calc": f"Category is not {rule['category']}."})
                 continue
             if not amount_usable:
-                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or foreign currency."})
+                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or in a currency the policy does not accept."})
                 continue
             n = nights if isinstance(nights, int) and nights > 0 else None
             if n is None:
@@ -221,7 +250,7 @@ def evaluate(policy: dict, ext: dict[str, Any]) -> dict[str, Any]:
                 trace.append({"rule_id": rid, "result": "n/a", "calc": f"Category is not {rule['category']}."})
                 continue
             if not amount_usable:
-                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or foreign currency."})
+                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or in a currency the policy does not accept."})
                 continue
             lim, need = rule["limit_amount"], rule["required_approval"]
             if amount > lim:
@@ -273,7 +302,7 @@ def evaluate(policy: dict, ext: dict[str, Any]) -> dict[str, Any]:
         # ---- approval tiers
         elif chk == "approval_tiers":
             if not amount_usable or tier is None:
-                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or foreign currency."})
+                trace.append({"rule_id": rid, "result": "skipped", "calc": "Amount unavailable or in a currency the policy does not accept."})
                 continue
             need = tier["required_approval"]
             if need is None:
@@ -335,13 +364,21 @@ def evaluate(policy: dict, ext: dict[str, Any]) -> dict[str, Any]:
         req = "Cannot be determined"
 
     notes = " ".join(review + [f"Assumption: {a}" for a in assumptions] + extra_notes)
+    if conversion:
+        notes = (notes + " " if notes else "") + (
+            f"Limits were checked on {_fmt(amount)} {pol_cur}: {_fmt(invoice_amount)} {currency} at the fixed "
+            f"policy rate of {conversion['rate']:g}.")
     if ext.get("approval_evidence"):
         notes = (notes + " " if notes else "") + f"Approval evidence read from record: \"{ext['approval_evidence']}\"."
 
     return {
         "vendor": vendor,
-        "amount": amount,  # None when missing/unreadable (UI shows a dash, never a fake 0)
-        "currency": currency or (pol_cur if amount is not None else ""),
+        "invoice_number": str(ext.get("invoice_number") or "").strip(),
+        "amount": invoice_amount,  # as printed; None when missing/unreadable (UI shows a dash, never a fake 0)
+        "currency": currency or (pol_cur if invoice_amount is not None else ""),
+        "amount_policy": amount if amount_usable else None,  # value in the policy currency the rules used
+        "policy_currency": pol_cur,
+        "conversion": conversion,
         "category": ext.get("category") or "",
         "date": ext.get("date") or "",
         "employee": ext.get("employee") or "",

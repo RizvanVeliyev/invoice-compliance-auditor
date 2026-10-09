@@ -157,9 +157,11 @@
   {
     "id": "17-foreign-currency",
     "file": "additional_test_invoices/17-foreign-currency.txt",
-    "expected_status": "needs_review",
-    "expected_rule_ids": [],
-    "tests": "Invoice is in USD but policy limits are in AZN with no conversion given — checks the system doesn't silently treat 180 USD as 180 AZN",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.1"
+    ],
+    "tests": "Invoice in USD: 180 USD x 1.7 = 306 AZN for one person, over the 150 AZN meal limit. Must be converted, not read as 180 AZN and not sent to review. [Expectation changed in policy v2.5: USD and EUR now have fixed rates.]",
     "llm_only": false
   },
   {
@@ -286,6 +288,51 @@
     "expected_status": "approved",
     "expected_rule_ids": [],
     "tests": "Amount '1.250,00 AZN' parsed as 1250, Manager tier met",
+    "llm_only": false
+  },
+  {
+    "id": "32-usd-meal-converted",
+    "file": "additional_test_invoices/32-usd-meal-converted.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "240 USD x 1.7 = 408 AZN for 3 people = 136 per person: under the meal limit and under the 500 AZN tier",
+    "llm_only": false
+  },
+  {
+    "id": "33-eur-hotel-over-limit",
+    "file": "additional_test_invoices/33-eur-hotel-over-limit.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-1.2"
+    ],
+    "tests": "340 EUR x 2 = 680 AZN over 2 nights = 340 per night (limit 300); Manager approval covers the 500-2000 tier but does not waive the hotel limit",
+    "llm_only": false
+  },
+  {
+    "id": "34-usd-software-crosses-threshold",
+    "file": "additional_test_invoices/34-usd-software-crosses-threshold.txt",
+    "expected_status": "flagged",
+    "expected_rule_ids": [
+      "EXP-2.1",
+      "EXP-4.1"
+    ],
+    "tests": "$650 looks under the 1000 software threshold but is 1105 AZN: needs IT approval and Manager approval",
+    "llm_only": false
+  },
+  {
+    "id": "35-eur-tier-boundary",
+    "file": "additional_test_invoices/35-eur-tier-boundary.txt",
+    "expected_status": "approved",
+    "expected_rule_ids": [],
+    "tests": "1000 EUR x 2 = exactly 2000 AZN: still the Manager tier (upper boundary inclusive) after conversion",
+    "llm_only": false
+  },
+  {
+    "id": "36-unsupported-currency-gbp",
+    "file": "additional_test_invoices/36-unsupported-currency-gbp.txt",
+    "expected_status": "needs_review",
+    "expected_rule_ids": [],
+    "tests": "GBP has no rate in the policy: must go to a person, never be read as 60 AZN",
     "llm_only": false
   },
   {

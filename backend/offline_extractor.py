@@ -96,6 +96,21 @@ def _approvals_with_evidence(raw: str):
     return list(dict.fromkeys(out)), "; ".join(used)
 
 
+_INVOICE_NO = (
+    r"^\s*(?:invoice|receipt|bill|document)\s*(?:no|number|num)?\s*[.:#№]*\s*([A-Za-z0-9][\w/-]*)\s*$",
+    r"^\s*(?:no|№)\s*[.:]\s*([A-Za-z0-9][\w/-]*)\s*$",
+)
+
+
+def _invoice_number(text: str) -> str:
+    """'Invoice No: X', 'Invoice #X', 'Receipt No. X' or a bare 'No. X' line. Must contain a digit."""
+    for pat in _INVOICE_NO:
+        for m in re.finditer(pat, text, re.I | re.M):
+            if re.search(r"\d", m.group(1)):
+                return m.group(1)
+    return ""
+
+
 def extract(text: str) -> dict:
     amount_raw = _field(text, "Amount")
     amount, currency = _amount(amount_raw) if amount_raw else (None, "")
@@ -125,6 +140,7 @@ def extract(text: str) -> dict:
         date = ""
     return {
         "vendor": _field(text, "Vendor"),
+        "invoice_number": _invoice_number(text),
         "amount": amount,
         "currency": currency,
         "category": _field(text, "Category"),

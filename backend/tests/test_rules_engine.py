@@ -54,8 +54,29 @@ def test_unlisted_vendor_and_fd_waiver():
     assert ev(vendor="Nobody Ltd", approvals=["finance_director"])["status"] == "approved"
 
 
-def test_foreign_currency_and_missing_fields_need_review():
-    assert ev(currency="USD", amount=180)["status"] == "needs_review"
+def test_usd_and_eur_are_converted_at_the_fixed_policy_rates():
+    r = ev(currency="USD", amount=180)                      # 306 AZN for one person
+    assert rules(r) == ["EXP-1.1"] and r["amount"] == 180 and r["currency"] == "USD"
+    assert r["amount_policy"] == 306 and r["conversion"]["rate"] == 1.7
+    assert r["trace"][0] == {"rule_id": "FX", "result": "info",
+                             "calc": "180 USD x 1.7 = 306 AZN (fixed policy rate)"}
+    assert ev(currency="USD", amount=88)["status"] == "approved"          # 149.60 AZN
+    assert rules(ev(currency="USD", amount=88.3)) == ["EXP-1.1"]          # 150.11 AZN
+    assert ev(currency="EUR", amount=75)["status"] == "approved"          # exactly 150 AZN
+    assert rules(ev(currency="EUR", amount=75.01)) == ["EXP-1.1"]
+    assert ev(currency="AZN", amount=150)["conversion"] is None
+
+
+def test_tiers_use_the_converted_amount():
+    cat = dict(category="Office Equipment", vendor="Caspian Office Supplies")
+    assert rules(ev(currency="EUR", amount=250, **cat)) == ["EXP-4.1"]                  # 500 AZN -> Manager
+    assert ev(currency="EUR", amount=1000, approvals=["manager"], **cat)["status"] == "approved"   # 2000 AZN
+    assert rules(ev(currency="USD", amount=1200, approvals=["manager"], **cat)) == ["EXP-4.1"]      # 2040 AZN -> FD
+
+
+def test_currency_without_a_rate_and_missing_fields_need_review():
+    r = ev(currency="GBP", amount=60)
+    assert r["status"] == "needs_review" and r["amount_policy"] is None and "GBP" in r["notes"]
     assert ev(date="")["status"] == "needs_review"
     assert ev(amount=None)["status"] == "needs_review"
 

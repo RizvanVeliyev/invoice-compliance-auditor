@@ -1,0 +1,10 @@
+EXPENSE RECORD
+
+Invoice No: CCG-30440
+Vendor: City Catering Group
+Date: 2026-10-12
+Employee: Tofiq Mammadli
+Category: Meals & Entertainment
+Description: Dinner, single attendee
+Amount: 60 GBP
+Approval: None stated

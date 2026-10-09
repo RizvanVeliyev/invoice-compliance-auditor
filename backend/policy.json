@@ -1,8 +1,17 @@
 {
   "company_name": "Nordvik Holdings",
-  "policy_version": "v2.4",
+  "policy_version": "v2.5",
   "effective_date": "2026-01-01",
   "currency": "AZN",
+  "accepted_currencies": [
+    "AZN",
+    "USD",
+    "EUR"
+  ],
+  "fx_rates": {
+    "USD": 1.7,
+    "EUR": 2.0
+  },
   "rules": [
     {
       "id": "EXP-1.1",
@@ -150,15 +159,15 @@
     "action": "needs_review",
     "cleared_when": "amount falls in an approval tier that requires approval and that approval is documented on the record"
   },
-  "fx_rates": null,
   "decision_notes": [
-    "Foreign-currency invoices are routed to needs_review: this policy defines no exchange rate.",
+    "Invoices in USD and EUR are converted to AZN at the fixed policy rates (1 USD = 1.7 AZN, 1 EUR = 2 AZN) before any limit is checked; every other currency is routed to needs_review.",
     "A missing attendee count on a meal is assumed to be 1 person (strictest reading) and reported as an assumption.",
     "Tier boundaries: 500 AZN needs Manager approval; exactly 2000 AZN still needs only Manager; above 2000 needs Finance Director.",
     "A higher approval covers a lower one (Director or Finance Director satisfy a Manager requirement); IT approval is separate.",
     "Generic 'travel' (flights, taxis, trains) is NOT accommodation: only hotel/lodging categories get the per-night rule. Other travel is an uncovered category.",
     "Uncovered categories under the first approval tier go to needs_review (no rule and no approval to rely on); in an approval tier they are cleared by the documented tier approval. This follows sample case 06 vs case 18.",
     "Zero or negative amounts (refunds, credit notes) are routed to needs_review.",
-    "Approval claims are verified by code against the document text; claims that cannot be found, are pending/refused, or come from text addressed to an automated reviewer are discarded and sent to review."
+    "Approval claims are verified by code against the document text; claims that cannot be found, are pending/refused, or come from text addressed to an automated reviewer are discarded and sent to review.",
+    "A duplicate invoice is not accepted: the same file, the same vendor + invoice number, or the same vendor + amount + currency + date as an earlier submission that was not rejected is blocked at upload."
   ]
 }

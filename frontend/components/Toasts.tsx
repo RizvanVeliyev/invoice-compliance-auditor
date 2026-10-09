@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { createContext, useCallback, useContext, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 type Tone = "flagged" | "needs_review" | "approved" | "info";
 type Toast = { id: number; title: string; body?: string; tone: Tone; href?: string };
@@ -13,6 +14,7 @@ export function useToast() {
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const { t: tr } = useI18n();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const push = useCallback((t: Omit<Toast, "id">) => {
     const id = Date.now() + Math.random();
@@ -29,12 +31,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             {t.body && <div className="toast-body">{t.body}</div>}
             {t.href && (
               <Link className="toast-link" href={t.href}>
-                Open
+                {tr("common.open")}
               </Link>
             )}
             <button
               className="toast-close"
-              aria-label="Dismiss"
+              aria-label={tr("common.dismiss")}
               onClick={() => setToasts((xs) => xs.filter((x) => x.id !== t.id))}
             >
               ×

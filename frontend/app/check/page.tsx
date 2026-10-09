@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import ResultView from "@/components/ResultView";
 import Stamp from "@/components/Stamp";
-import { AnalysisResult, api } from "@/lib/api";
+import { AnalysisResult, api, postJson } from "@/lib/api";
+import { Guard } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 
 type Sample = { id: string; label: string; text: string };
 
-export default function QuickCheck() {
+function QuickCheck() {
+  const { t } = useI18n();
   const [samples, setSamples] = useState<Sample[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [text, setText] = useState("");
@@ -25,15 +28,11 @@ export default function QuickCheck() {
     setBusy(true);
     setError(null);
     try {
-      const r = await api<AnalysisResult>("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invoice_text: text }),
-      });
+      const r = await postJson<AnalysisResult>("/api/analyze", { invoice_text: text });
       setResult(r);
       setRun((n) => n + 1);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "The check failed.");
+      setError(e instanceof Error ? e.message : t("check.error"));
     } finally {
       setBusy(false);
     }
@@ -42,17 +41,16 @@ export default function QuickCheck() {
   return (
     <div className="page">
       <header className="page-head">
-        <h1>Quick check</h1>
+        <h1>{t("nav.check")}</h1>
         <p className="lede">
-          Paste an invoice or expense record to see how the policy treats it. Nothing is sent to the audit team from
-          here; to submit a real invoice, use <a href="/submit">Submit an invoice</a>.
+          {t("check.lede")} <a href="/submit">{t("nav.submit")}</a>.
         </p>
       </header>
 
       <div className="check-grid">
         <div className="check-input">
           {samples.length > 0 && (
-            <div className="chips" aria-label="Test cases">
+            <div className="chips" aria-label={t("check.cases")}>
               {samples.map((s) => (
                 <button
                   key={s.id}
@@ -69,7 +67,7 @@ export default function QuickCheck() {
             </div>
           )}
           <label className="fld">
-            <span>Invoice text</span>
+            <span>{t("check.text")}</span>
             <textarea
               className="paste"
               value={text}
@@ -86,14 +84,14 @@ export default function QuickCheck() {
             </p>
           )}
           <button className="btn btn-primary btn-wide" onClick={check} disabled={busy || !text.trim()}>
-            {busy ? "Checking…" : "Check against policy"}
+            {t(busy ? "check.busy" : "check.btn")}
           </button>
         </div>
 
         <div aria-live="polite">
           {!result && !busy && (
             <div className="sheet sheet-empty">
-              <p>Pick a test case or paste an invoice, then check it.</p>
+              <p>{t("check.empty")}</p>
             </div>
           )}
           {busy && (
@@ -117,5 +115,13 @@ export default function QuickCheck() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function QuickCheckPage() {
+  return (
+    <Guard>
+      <QuickCheck />
+    </Guard>
   );
 }

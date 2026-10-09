@@ -1,0 +1,10 @@
+EXPENSE RECORD
+
+Invoice No: CCG-30418
+Vendor: City Catering Group
+Date: 2026-10-08
+Employee: Tofiq Mammadli
+Category: Meals & Entertainment
+Description: Lunch with 2 clients
+Amount: 240 USD
+Approval: None stated

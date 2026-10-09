@@ -1,0 +1,10 @@
+EXPENSE RECORD
+
+Invoice No: BBH-90022
+Vendor: Baku Business Hotel
+Date: 2026-10-09 to 2026-10-11
+Employee: Sabina Rzayeva
+Category: Travel - Accommodation
+Description: Standard room, 2 nights, partner meeting
+Amount: 340 EUR
+Approval: Approved by Manager Rauf Ismayilov

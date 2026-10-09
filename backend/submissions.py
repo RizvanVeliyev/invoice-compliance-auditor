@@ -34,6 +34,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import mailer
 import rules_engine
 import service
 
@@ -525,7 +526,9 @@ def decide(sid: int, decision: str, comment: str, reviewer: dict) -> dict | None
                 (decision, (comment or "").strip()[:1000], reviewer["name"][:120], reviewer["id"], _now(), sid))
     finally:
         con.close()
-    return get(sid)
+    decided = get(sid)
+    mailer.notify_decision(decided)          # email to the employee; never blocks or fails the decision
+    return decided
 
 
 def reopen(sid: int, reason: str, reviewer: dict) -> dict | None:

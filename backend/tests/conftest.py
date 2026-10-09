@@ -26,6 +26,8 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "offline")
     monkeypatch.delenv("ALERT_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("AUDITOR_SIGNUP", raising=False)
+    for name in ("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD"):       # tests never send real mail
+        monkeypatch.delenv(name, raising=False)
     for role, (email, name) in PEOPLE.items():
         auth.create_user(email, name, role, PASSWORD)
     return TestClient(main.app)

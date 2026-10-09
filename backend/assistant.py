@@ -51,6 +51,15 @@ WORDS = {
              "расход", "потратил", "status", "vəziyyət", "статус", "hesabat", "report", "отчёт", "отчет"),
     "queue": ("növbə", "novbe", "gözləyən", "gozleyen", "queue", "waiting", "open alerts", "pending", "очеред", "ожида", "открыт"),
     "rules": ("qayda", "limit", "siyasət", "siyaset", "rule", "policy", "правил", "лимит", "политик"),
+    "budget": ("maks", "max", "ən çox nə qədər", "nə qədər xərc", "ne qeder", "how much can", "up to", "at most",
+               "сколько можно", "максим", "нə qədər ola"),
+    "breakdown": ("kateqoriya", "category", "categories", "категор", "hara xərc", "hara xerc", "where did", "where does",
+                  "куда", "nəyə xərc", "neye xerc"),
+    "last": ("son faktura", "sonuncu", "last invoice", "latest invoice", "my last", "последн"),
+    "howto": ("necə göndər", "nece gonder", "how do i submit", "how to submit", "как отправ", "nə lazımdır", "ne lazimdir",
+              "what do i need", "checklist", "что нужно", "yoxlama siyahısı"),
+    "who": ("kim ", "who ", "кто ", "ən çox xərcləyən", "top spender", "больше всех"),
+    "violations": ("pozuntu", "violation", "нарушен", "broken rule", "ən çox pozulan"),
     "hello": ("salam", "hello", "hi ", "hey", "привет", "здравств", "kömək", "komek", "help", "помощ", "nə edə", "what can"),
 }
 
@@ -141,6 +150,52 @@ T = {
               "ru": "Стол аудита: открыто {open}, из них с нарушением {flagged}, на проверке {review}; решено {decided} из {total}."},
     "limit": {"en": "Too many messages in a minute. Wait a moment.", "az": "Bir dəqiqədə çox mesaj göndərildi. Bir az gözləyin.",
               "ru": "Слишком много сообщений за минуту. Подождите немного."},
+    "tip_hotel": {"en": "To stay within the limit: at most {max} {pc} for {n} night(s).",
+                  "az": "Limitə sığmaq üçün: {n} gecəyə ən çox {max} {pc}.",
+                  "ru": "Чтобы уложиться в лимит: не более {max} {pc} за {n} ноч.(и)."},
+    "tip_meal": {"en": "To stay within the limit: at most {max} {pc} for {n} person(s).",
+                 "az": "Limitə sığmaq üçün: {n} nəfərə ən çox {max} {pc}.",
+                 "ru": "Чтобы уложиться в лимит: не более {max} {pc} на {n} чел."},
+    "b_hotel": {"en": "Hotel, {n} night(s): up to {max} {pc} ({lim} per night){fx}.",
+                "az": "Otel, {n} gecə: ən çox {max} {pc} (gecəsi {lim}){fx}.",
+                "ru": "Отель, {n} ноч.: до {max} {pc} ({lim} за ночь){fx}."},
+    "b_meal": {"en": "Meal, {n} person(s): up to {max} {pc} ({lim} per person){fx}.",
+               "az": "Yemək, {n} nəfər: ən çox {max} {pc} (adambaşı {lim}){fx}.",
+               "ru": "Питание, {n} чел.: до {max} {pc} ({lim} на человека){fx}."},
+    "b_soft": {"en": "Software: up to {lim} {pc} without IT approval{fx}.",
+               "az": "Proqram təminatı: İT təsdiqi olmadan ən çox {lim} {pc}{fx}.",
+               "ru": "ПО: до {lim} {pc} без согласования ИТ{fx}."},
+    "b_fx": {"en": ", that is {list}", "az": ", yəni {list}", "ru": ", то есть {list}"},
+    "b_tier": {"en": "From {a} {pc} the invoice also needs {who} approval written on it.",
+               "az": "{a} {pc}-dən başlayaraq fakturada {who} təsdiqi də göstərilməlidir.",
+               "ru": "Начиная с {a} {pc} в счёте нужно указать согласование: {who}."},
+    "b_free": {"en": "No approval is needed below {a} {pc}.", "az": "{a} {pc}-dən aşağı təsdiq tələb olunmur.",
+               "ru": "До {a} {pc} согласование не требуется."},
+    "bd_head": {"en": "Where your {total} {cur} went (last 6 months):", "az": "{total} {cur} hara xərclənib (son 6 ay):",
+                "ru": "На что ушли ваши {total} {cur} (за 6 месяцев):"},
+    "bd_line": {"en": "• {cat}: {amount} {cur} ({share}%), invoices: {n}", "az": "• {cat}: {amount} {cur} ({share}%), faktura: {n}",
+                "ru": "• {cat}: {amount} {cur} ({share}%), счетов: {n}"},
+    "bd_vendor": {"en": "Top vendor: {v} ({amount} {cur}).", "az": "Əsas satıcı: {v} ({amount} {cur}).",
+                  "ru": "Основной поставщик: {v} ({amount} {cur})."},
+    "howto": {
+        "en": "Before you send an invoice, check:\n1. The vendor is on the approved list.\n2. The invoice number, date and total are readable.\n3. For {a} {cur} and more, the approval is written on the invoice (Manager; above {b} {cur} Finance Director).\n4. A hotel shows the number of nights, a meal the number of people.\n5. It was not sent before: duplicates are refused.\nUSD and EUR are fine; they are converted at the fixed rate.",
+        "az": "Fakturanı göndərməzdən əvvəl yoxlayın:\n1. Satıcı təsdiqlənmiş siyahıdadır.\n2. Faktura nömrəsi, tarix və yekun məbləğ oxunaqlıdır.\n3. {a} {cur} və daha çox üçün təsdiq fakturada yazılıb (Menecer; {b} {cur}-dən yuxarı Maliyyə Direktoru).\n4. Oteldə gecələrin, yeməkdə nəfərlərin sayı göstərilib.\n5. Əvvəl göndərilməyib: dublikatlar rədd edilir.\nUSD və EUR olar; sabit məzənnə ilə çevrilir.",
+        "ru": "Перед отправкой счёта проверьте:\n1. Поставщик есть в утверждённом списке.\n2. Номер счёта, дата и итог читаются.\n3. От {a} {cur} согласование указано в счёте (менеджер; свыше {b} {cur} — финансовый директор).\n4. Для отеля указано число ночей, для питания — число человек.\n5. Счёт не отправлялся раньше: дубликаты отклоняются.\nUSD и EUR допустимы; пересчёт по фиксированному курсу.",
+    },
+    "who_head": {"en": "Who has submitted the most:", "az": "Ən çox faktura göndərənlər:", "ru": "Кто отправил больше всего:"},
+    "who_line": {"en": "{i}. {name}: {amount} {cur}, invoices: {n}, flagged: {f}", "az": "{i}. {name}: {amount} {cur}, faktura: {n}, pozuntu: {f}",
+                 "ru": "{i}. {name}: {amount} {cur}, счетов: {n}, нарушений: {f}"},
+    "who_none": {"en": "Nobody has submitted an invoice yet.", "az": "Hələ heç kim faktura göndərməyib.", "ru": "Пока никто не отправлял счетов."},
+    "vio_head": {"en": "Rules broken most often:", "az": "Ən çox pozulan qaydalar:", "ru": "Чаще всего нарушаются:"},
+    "vio_line": {"en": "• {rule}: {n} time(s)", "az": "• {rule}: {n} dəfə", "ru": "• {rule}: {n} раз(а)"},
+    "vio_none": {"en": "No rule has been broken yet.", "az": "Hələ heç bir qayda pozulmayıb.", "ru": "Пока ни одно правило не нарушено."},
+    "vio_dups": {"en": "Duplicates refused: {n}.", "az": "Rədd edilən dublikatlar: {n}.", "ru": "Отклонено дубликатов: {n}."},
+    "a_submit": {"en": "Submit an invoice", "az": "Faktura göndər", "ru": "Отправить счёт"},
+    "a_my": {"en": "My invoices", "az": "Fakturalarım", "ru": "Мои счета"},
+    "a_open": {"en": "Open invoice #{id}", "az": "Faktura #{id}-i aç", "ru": "Открыть счёт №{id}"},
+    "a_desk": {"en": "Open the audit desk", "az": "Audit masasını aç", "ru": "Открыть стол аудита"},
+    "a_people": {"en": "Employees", "az": "İşçilər", "ru": "Сотрудники"},
+    "a_overview": {"en": "Overview", "az": "Ümumi hesabat", "ru": "Общий отчёт"},
     "manager": {"en": "Manager", "az": "Menecer", "ru": "менеджер"},
     "finance_director": {"en": "Finance Director", "az": "Maliyyə Direktoru", "ru": "финансовый директор"},
     "it": {"en": "IT", "az": "İT", "ru": "ИТ"},
@@ -152,12 +207,18 @@ CATEGORY_NAMES = {
     "Software & Subscriptions": {"en": "software", "az": "proqram təminatı", "ru": "ПО"},
 }
 SUGGEST = {
-    "employee": {"en": ["Hotel limit", "Software 650 USD", "My invoices", "Which currencies?"],
-                 "az": ["Otel limiti", "Proqram 650 USD", "Fakturalarım", "Hansı valyutalar?"],
-                 "ru": ["Лимит на отель", "ПО 650 USD", "Мои счета", "Какие валюты?"]},
-    "auditor": {"en": ["Queue", "Approval tiers", "Hotel 900 AZN 2 nights", "Approved vendors"],
-                "az": ["Növbə", "Təsdiq səviyyələri", "Otel 900 AZN 2 gecə", "Təsdiqlənmiş satıcılar"],
-                "ru": ["Очередь", "Уровни согласования", "Отель 900 AZN 2 ночи", "Утверждённые поставщики"]},
+    "employee": {"en": ["Max for hotel, 3 nights", "Software 650 USD", "My invoices", "Spending by category",
+                        "My last invoice", "What do I need to submit?"],
+                 "az": ["Otel üçün maks, 3 gecə", "Proqram 650 USD", "Fakturalarım", "Kateqoriya üzrə xərcim",
+                        "Son fakturam", "Göndərmək üçün nə lazımdır?"],
+                 "ru": ["Максимум на отель, 3 ночи", "ПО 650 USD", "Мои счета", "Расходы по категориям",
+                        "Мой последний счёт", "Что нужно для отправки?"]},
+    "auditor": {"en": ["Queue", "Who spends the most?", "Most broken rules", "Hotel 900 AZN 2 nights",
+                       "Approval tiers", "Approved vendors"],
+                "az": ["Növbə", "Ən çox kim xərcləyib?", "Ən çox pozulan qaydalar", "Otel 900 AZN 2 gecə",
+                       "Təsdiq səviyyələri", "Təsdiqlənmiş satıcılar"],
+                "ru": ["Очередь", "Кто тратит больше всех?", "Чаще всего нарушаются", "Отель 900 AZN 2 ночи",
+                       "Уровни согласования", "Утверждённые поставщики"]},
 }
 
 
@@ -218,7 +279,7 @@ def _find_amount(text: str) -> tuple[float | None, str]:
     return None, ""
 
 
-def _what_if(policy: dict, lang: str, text: str, user: dict) -> str | None:
+def _what_if(policy: dict, lang: str, text: str, user: dict) -> tuple[str, str] | None:
     """Run a planned expense through the real rules engine and explain the outcome."""
     amount, currency = _find_amount(text)
     category = next((c for c, words in CATEGORY_WORDS.items() if any(w in text for w in words)), None)
@@ -228,7 +289,7 @@ def _what_if(policy: dict, lang: str, text: str, user: dict) -> str | None:
     currency = currency or pol_cur
     rate = rules_engine.fx_rate(policy, currency)
     if rate is None:
-        return _t("w_nocur", lang, c=currency)
+        return _t("w_nocur", lang, c=currency), "warn"
     nights = re.search(r"(\d+)\s*(?:gec|night|ноч)", text)
     people = re.search(r"(\d+)\s*(?:nəfər|nefer|adam|person|people|чел|guest|qonaq)", text)
     record = {"vendor": policy["approved_vendors"][0], "amount": amount, "currency": currency,
@@ -241,33 +302,41 @@ def _what_if(policy: dict, lang: str, text: str, user: dict) -> str | None:
     conv = _t("w_conv", lang, v=_n(value), pc=pol_cur, rate=f"{rate:g}") if currency != pol_cur else ""
     lines = [_t("w_head", lang, amount=_n(amount), cur=currency, conv=conv,
                 cat=CATEGORY_NAMES[category][lang] if category else _t("other", lang))]
-    assumed = None
+    assumed = tip = None
     if category == "Meals & Entertainment":
         n = record["attendees"] or 1
         assumed = None if record["attendees"] else _t("one person", lang)
         lim = _rule(policy, "per_person_limit")["limit_amount"]
         lines.append(_t("w_meal_bad" if "EXP-1.1" in broken else "w_meal_ok", lang, per=_n(value / n), pc=pol_cur, n=n, lim=_n(lim)))
+        if "EXP-1.1" in broken:
+            tip = _t("tip_meal", lang, max=_n(lim * n), pc=pol_cur, n=n)
     elif category == "Travel - Accommodation":
         n = record["nights"] or 1
         assumed = None if record["nights"] else _t("one night", lang)
         lim = _rule(policy, "per_night_limit")["limit_amount"]
         lines.append(_t("w_hotel_bad" if "EXP-1.2" in broken else "w_hotel_ok", lang, per=_n(value / n), pc=pol_cur, n=n, lim=_n(lim)))
+        if "EXP-1.2" in broken:
+            tip = _t("tip_hotel", lang, max=_n(lim * n), pc=pol_cur, n=n)
     elif category == "Software & Subscriptions" and "EXP-2.1" in broken:
         lines.append(_t("w_soft", lang, lim=_n(_rule(policy, "approval_over_amount")["limit_amount"]), pc=pol_cur))
     tier = rules_engine._tier_for(policy, value)
     need = tier and tier.get("required_approval")
     lines.append(_t("w_tier", lang, who=_t(need, lang)) if need else _t("w_none", lang))
+    if tip:
+        lines.append(tip)
     if assumed:
         lines.append(_t("w_assumed", lang, what=assumed))
     lines.append(_t("w_vendor", lang))
-    return "\n".join(lines)
+    tone = "bad" if broken & {"EXP-1.1", "EXP-1.2"} else "warn" if (need or "EXP-2.1" in broken) else "ok"
+    return "\n".join(lines), tone
 
 
 # ------------------------------------------------------------------ answers about invoices
-def _invoice(lang: str, user: dict, sid: int, auditor: bool) -> str:
+def _invoice(lang: str, user: dict, sid: int, auditor: bool) -> tuple[str, str, bool]:
+    """(text, tone, found). An employee asking about a colleague's invoice gets the same answer as for a missing one."""
     sub = submissions.get(sid)
     if not sub or (not auditor and sub.get("user_id") != user["id"]):
-        return _t("inv_none", lang, id=sid)                 # never reveals that someone else's invoice exists
+        return _t("inv_none", lang, id=sid), "info", False
     state = "rejected" if sub["decision"] == "rejected" else "cleared" if (sub["decision"] or not sub["alert"]) else "in_review"
     lines = [_t("inv", lang, id=sid, what=sub["vendor"] or sub["filename"], amount=sub["amount_label"], state=_t(f"st_{state}", lang))]
     if sub["violation_ids"]:
@@ -280,7 +349,7 @@ def _invoice(lang: str, user: dict, sid: int, auditor: bool) -> str:
         lines.append(_t("inv_by", lang, who=sub.get("reviewer") or "auditor", comment=comment))
         if state == "rejected":
             lines.append(_t("inv_fix", lang))
-    return "\n".join(lines)
+    return "\n".join(lines), {"rejected": "bad", "in_review": "warn", "cleared": "ok"}[state], True
 
 
 def _mine(policy: dict, lang: str, user: dict) -> str:
@@ -294,6 +363,77 @@ def _mine(policy: dict, lang: str, user: dict) -> str:
     last = submissions.list_mine(user["id"], limit=3)
     return text + "\n" + _t("mine_last", lang, list="; ".join(
         f"#{s['id']} {s['vendor'] or s['filename']} ({_t('st_' + s['outcome'], lang)})" for s in last))
+
+
+def _budget(policy: dict, lang: str, text: str) -> str | None:
+    """'How much may I spend?': the most that stays inside the limit, in every accepted currency."""
+    category = next((c for c, words in CATEGORY_WORDS.items() if any(w in text for w in words)), None)
+    if not category or not _has(text, "budget"):
+        return None
+    cur = policy.get("currency", "AZN")
+    nights = re.search(r"(\d+)\s*(?:gec|night|ноч)", text)
+    people = re.search(r"(\d+)\s*(?:nəfər|nefer|adam|person|people|чел|guest|qonaq)", text)
+
+    def fx(amount: float) -> str:
+        parts = [f"{_n(amount / r)} {c}" for c, r in (policy.get("fx_rates") or {}).items()]
+        return _t("b_fx", lang, list=" / ".join(parts)) if parts else ""
+
+    if category == "Travel - Accommodation":
+        lim, n = _rule(policy, "per_night_limit")["limit_amount"], int(nights.group(1)) if nights else 1
+        top, line = lim * n, _t("b_hotel", lang, n=n, max=_n(lim * n), pc=cur, lim=_n(lim), fx=fx(lim * n))
+    elif category == "Meals & Entertainment":
+        lim, n = _rule(policy, "per_person_limit")["limit_amount"], int(people.group(1)) if people else 1
+        top, line = lim * n, _t("b_meal", lang, n=n, max=_n(lim * n), pc=cur, lim=_n(lim), fx=fx(lim * n))
+    else:
+        lim = _rule(policy, "approval_over_amount")["limit_amount"]
+        top, line = lim, _t("b_soft", lang, lim=_n(lim), pc=cur, fx=fx(lim))
+    tiers = [t for t in policy["approval_thresholds"] if t.get("required_approval")]
+    first = tiers[0] if tiers else None
+    if first:
+        line += "\n" + (_t("b_tier", lang, a=_n(first["min"]), pc=cur, who=_t(first["required_approval"], lang))
+                        if top >= first["min"] else _t("b_free", lang, a=_n(first["min"]), pc=cur))
+    return line
+
+
+def _breakdown(policy: dict, lang: str, user: dict) -> str:
+    report = submissions.report(policy, user["id"], 6)
+    total = report["money"]["amount"]
+    if report["totals"]["count"] == 0 or total <= 0:
+        return _t("mine_none", lang)
+    cur = report["policy_currency"]
+    lines = [_t("bd_head", lang, total=_n(total), cur=cur)]
+    for c in report["by_category"][:5]:
+        name = CATEGORY_NAMES.get(c["category"], {}).get(lang) or c["category"]
+        lines.append(_t("bd_line", lang, cat=name, amount=_n(c["amount"]), cur=cur, share=round(c["amount"] / total * 100), n=c["count"]))
+    if report["top_vendors"]:
+        v = report["top_vendors"][0]
+        lines.append(_t("bd_vendor", lang, v=v["vendor"], amount=_n(v["amount"]), cur=cur))
+    return "\n".join(lines)
+
+
+def _howto(policy: dict, lang: str) -> str:
+    tiers = [t for t in policy["approval_thresholds"] if t.get("required_approval")]
+    return _t("howto", lang, a=_n(tiers[0]["min"]), b=_n(tiers[-1]["min"]), cur=policy.get("currency", "AZN"))
+
+
+def _who(policy: dict, lang: str) -> str:
+    import auth
+    top = [p for p in submissions.people(policy, auth.list_users()) if p["count"] > 0]
+    top.sort(key=lambda p: -p["amount"])
+    if not top:
+        return _t("who_none", lang)
+    cur = policy.get("currency", "AZN")
+    return "\n".join([_t("who_head", lang)] + [
+        _t("who_line", lang, i=i, name=p["name"], amount=_n(p["amount"]), cur=cur, n=p["count"], f=p["flagged"])
+        for i, p in enumerate(top[:5], 1)])
+
+
+def _violations(policy: dict, lang: str) -> str:
+    o = submissions.overview(policy)
+    lines = [_t("vio_head", lang)] + [_t("vio_line", lang, rule=r["rule_id"], n=r["count"]) for r in o["by_rule"][:5]]
+    if not o["by_rule"]:
+        lines = [_t("vio_none", lang)]
+    return "\n".join(lines + [_t("vio_dups", lang, n=o["counts"]["duplicates_blocked"])])
 
 
 # ------------------------------------------------------------------ optional model for everything else
@@ -343,37 +483,68 @@ def allowed(user_id: int) -> bool:
 
 
 def reply(policy: dict, user: dict, message: str, lang: str = "en") -> dict:
+    """One answer: text, a tone (ok / warn / bad / info), links that continue the task, and what to ask next."""
     lang = lang if lang in LANGS else "en"
     auditor = user["role"] in ("auditor", "admin")
     suggestions = SUGGEST["auditor" if auditor else "employee"][lang]
-    if not allowed(user["id"]):
-        return {"text": _t("limit", lang), "source": "rules", "suggestions": []}
-    text = " " + re.sub(r"\s+", " ", (message or "").strip().lower())[:MAX_MESSAGE] + " "
 
-    answer = None
+    def out(text: str, tone: str = "info", actions: list | None = None, source: str = "rules") -> dict:
+        return {"text": text, "tone": tone, "actions": actions or [], "source": source, "suggestions": suggestions}
+
+    def link(key: str, href: str, **kw) -> dict:
+        return {"label": _t(key, lang, **kw), "href": href}
+
+    if not allowed(user["id"]):
+        return {**out(_t("limit", lang), "warn"), "suggestions": []}
+    text = " " + re.sub(r"\s+", " ", (message or "").strip().lower())[:MAX_MESSAGE] + " "
+    my, submit = link("a_my", "/my"), link("a_submit", "/submit")
+
     ref = re.search(r"[#№]\s*(\d+)", text) or re.search(r"(?:faktura|invoice|счёт|счет|göndəriş)\s*(\d+)", text)
-    if ref:
-        answer = _invoice(lang, user, int(ref.group(1)), auditor)
-    if answer is None:
-        answer = _what_if(policy, lang, text, user)
-    if answer is None and _has(text, "duplicate"):
-        answer = _t("duplicate", lang)
-    if answer is None and auditor and _has(text, "queue"):
-        answer = _t("queue", lang, **{k: v for k, v in submissions.alert_summary().items()
-                                      if k in ("open", "flagged", "decided", "total")},
-                    review=submissions.alert_summary()["needs_review"])
-    if answer is None:
-        lines = _policy_lines(policy, lang, text)
-        if _has(text, "currency"):
-            lines.append(_currency_line(policy, lang))
-        answer = "\n".join(lines) or None
-    if answer is None and _has(text, "mine"):
-        answer = _mine(policy, lang, user)
-    if answer is None and _has(text, "hello"):
-        answer = _t("hello", lang, name=user["name"].split()[0])
-    if answer is not None:
-        return {"text": answer, "source": "rules", "suggestions": suggestions}
+    if ref or _has(text, "last"):
+        sid = int(ref.group(1)) if ref else None
+        if sid is None:
+            latest = submissions.list_mine(user["id"], limit=1)
+            if not latest:
+                return out(_t("mine_none", lang), actions=[submit])
+            sid = latest[0]["id"]
+            answer, tone, found = _invoice(lang, user, sid, False)
+        else:
+            answer, tone, found = _invoice(lang, user, sid, auditor)
+        if not found:
+            return out(answer, actions=[my])
+        return out(answer, tone, [link("a_open", f"/audit?id={sid}", id=sid) if auditor else my])
+
+    budget = _budget(policy, lang, text)
+    if budget:
+        return out(budget, "ok", [submit])
+    planned = _what_if(policy, lang, text, user)
+    if planned:
+        return out(planned[0], planned[1], [submit])
+    if _has(text, "howto"):
+        return out(_howto(policy, lang), actions=[submit])
+    if _has(text, "duplicate") and not (auditor and _has(text, "violations")):
+        return out(_t("duplicate", lang))
+    if auditor and _has(text, "queue"):
+        q = submissions.alert_summary()
+        return out(_t("queue", lang, open=q["open"], flagged=q["flagged"], review=q["needs_review"], decided=q["decided"],
+                      total=q["total"]), "warn" if q["open"] else "ok", [link("a_desk", "/audit")])
+    if auditor and _has(text, "who"):
+        return out(_who(policy, lang), actions=[link("a_people", "/employees")])
+    if auditor and _has(text, "violations"):
+        return out(_violations(policy, lang), actions=[link("a_overview", "/overview")])
+    if _has(text, "breakdown"):
+        return out(_breakdown(policy, lang, user), actions=[my])
+
+    lines = _policy_lines(policy, lang, text)
+    if _has(text, "currency"):
+        lines.append(_currency_line(policy, lang))
+    if lines:
+        return out("\n".join(lines))
+    if _has(text, "mine"):
+        return out(_mine(policy, lang, user), actions=[my])
+    if _has(text, "hello"):
+        return out(_t("hello", lang, name=user["name"].split()[0]))
     model = _ask_model(policy, lang, user, message.strip()[:MAX_MESSAGE])
     if model:
-        return {"text": model, "source": "model", "suggestions": suggestions}
-    return {"text": _t("fallback", lang), "source": "rules", "suggestions": suggestions}
+        return out(model, source="model")
+    return out(_t("fallback", lang))

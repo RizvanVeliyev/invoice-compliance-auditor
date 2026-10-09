@@ -13,7 +13,7 @@ def test_assistant_needs_a_session_and_a_question(client, as_):
     as_("employee")
     assert client.post("/api/chat", json={"message": "   "}).status_code == 400
     hello = client.post("/api/chat", json={"message": "salam", "lang": "az"}).json()
-    assert "Salam, Murad" in hello["text"] and hello["source"] == "rules" and len(hello["suggestions"]) == 4
+    assert "Salam, Murad" in hello["text"] and hello["source"] == "rules" and len(hello["suggestions"]) == 6
 
 
 def test_policy_questions_in_three_languages(client, as_):
@@ -79,9 +79,70 @@ def test_unknown_questions_and_the_rate_limit(client, as_, monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.setattr(assistant, "_ask_model", lambda *a: "From the model.")
     assert client.post("/api/chat", json={"message": "tell me a joke"}).json() == {
-        "text": "From the model.", "source": "model", "suggestions": r["suggestions"]}
+        "text": "From the model.", "tone": "info", "actions": [], "source": "model", "suggestions": r["suggestions"]}
     assert client.post("/api/chat", json={"message": "hotel limit"}).json()["source"] == "rules"   # code answers first
     monkeypatch.setattr(assistant, "PER_MINUTE", 2)
     monkeypatch.setattr(assistant, "_recent", {})
     ask(client, "hi "), ask(client, "hi ")
     assert "Too many" in ask(client, "hi ")
+
+
+def chat(client, text, lang="en"):
+    return client.post("/api/chat", json={"message": text, "lang": lang}).json()
+
+
+def test_answers_carry_a_verdict_tone_and_a_next_step(client, as_, submit):
+    as_("employee")
+    over = chat(client, "otel 900 AZN 2 gecə", "az")
+    assert over["tone"] == "bad" and "Limitə sığmaq üçün: 2 gecəyə ən çox 600 AZN." in over["text"]
+    assert over["actions"] == [{"label": "Faktura göndər", "href": "/submit"}]
+    assert chat(client, "software 650 USD")["tone"] == "warn" and chat(client, "hotel 250 azn")["tone"] == "ok"
+    assert "at most 450 AZN for 3 person(s)" in chat(client, "dinner 600 azn 3 people")["text"]
+
+    sid = submit("2-hotel-over-limit.pdf").json()["id"]
+    mine = chat(client, f"#{sid}")
+    assert mine["tone"] == "warn" and mine["actions"] == [{"label": "My invoices", "href": "/my"}]
+    last = chat(client, "son fakturam", "az")
+    assert f"#{sid}" in last["text"] and "Baku Business Hotel" in last["text"]
+    as_("auditor")
+    theirs = chat(client, f"#{sid}")
+    assert theirs["actions"] == [{"label": f"Open invoice #{sid}", "href": f"/audit?id={sid}"}]
+    client.post(f"/api/submissions/{sid}/decision", json={"decision": "rejected", "comment": "No"})
+    as_("employee")
+    assert chat(client, f"#{sid}")["tone"] == "bad"
+
+
+def test_budget_breakdown_checklist(client, as_, submit):
+    as_("employee")
+    hotel = chat(client, "otel üçün maks, 3 gecə", "az")
+    assert "ən çox 900 AZN (gecəsi 300)" in hotel["text"] and "529.41 USD / 450 EUR" in hotel["text"]
+    assert "Menecer təsdiqi" in hotel["text"] and hotel["tone"] == "ok"
+    meal = chat(client, "how much can I spend on lunch for 2 people")
+    assert "up to 300 AZN (150 per person)" in meal["text"] and "No approval is needed below 500 AZN" in meal["text"]
+    assert "до 1,000 AZN без согласования ИТ" in chat(client, "максимум на ПО", "ru")["text"]
+
+    assert "haven\'t submitted" in chat(client, "spending by category")["text"]
+    submit("2-hotel-over-limit.pdf"), submit("6-hotel-in-euro.pdf"), submit("7-software-in-dollars.pdf")
+    bd = chat(client, "kateqoriya üzrə xərcim", "az")["text"]
+    assert "2,805 AZN" in bd and "otel: 1,700 AZN (61%), faktura: 2" in bd and "proqram təminatı: 1,105 AZN (39%)" in bd
+    assert "Əsas satıcı: Baku Business Hotel (1,700 AZN)" in bd
+
+    how = chat(client, "what do I need to submit?")
+    assert "1. The vendor is on the approved list." in how["text"] and "For 500 AZN and more" in how["text"]
+    assert how["actions"][0]["href"] == "/submit"
+
+
+def test_audit_team_questions_are_for_the_audit_team(client, as_, submit):
+    as_("employee")
+    submit("2-hotel-over-limit.pdf"), submit("3-unlisted-software-vendor.pdf")
+    submit("2-hotel-over-limit.pdf")                                   # refused duplicate
+    assert "Murad" not in chat(client, "who spends the most?")["text"]   # an employee gets no ranking of colleagues
+    assert "Rules broken most often" not in chat(client, "most broken rules")["text"]     # company-wide numbers stay with audit
+    as_("auditor")
+    who = chat(client, "ən çox kim xərcləyib?", "az")
+    assert "1. Murad Quliyev: 3,590 AZN, faktura: 2, pozuntu: 2" in who["text"] and who["actions"][0]["href"] == "/employees"
+    vio = chat(client, "most broken rules")
+    assert "EXP-1.2: 1 time(s)" in vio["text"] and "EXP-4.1: 1 time(s)" in vio["text"] and "Duplicates refused: 1." in vio["text"]
+    assert vio["actions"][0]["href"] == "/overview"
+    queue = chat(client, "очередь", "ru")
+    assert queue["tone"] == "warn" and queue["actions"] == [{"label": "Открыть стол аудита", "href": "/audit"}]

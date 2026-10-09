@@ -87,6 +87,9 @@ const PATHS: Record<string, React.ReactNode> = {
   ),
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  send: <path d="M4 12 20 4l-6 16-3-7z" />,
+  grow: <path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7" />,
+  shrink: <path d="M20 10h-6V4M14 10l7-7M4 14h6v6M10 14l-7 7" />,
   chat: (
     <>
       <path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />

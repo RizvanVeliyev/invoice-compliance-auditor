@@ -100,15 +100,32 @@ Other settings in `backend/.env`: `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME
 `COOKIE_SECURE=1` behind https,
 `ALERT_WEBHOOK_URL` + `APP_PUBLIC_URL` (post each alert to Slack / Teams / Discord with a link to it).
 
-**Without Docker**
+**Without Docker** (Python 3.11+ and Node 18+)
+
+Backend, in one terminal:
 ```bash
-cd backend && python -m venv venv && source venv/bin/activate
+cd backend
+python -m venv venv
+venv\Scripts\activate            # Windows   (macOS / Linux: source venv/bin/activate)
 pip install -r requirements.txt
-cp .env.example .env              # admin account, provider + key (or LLM_PROVIDER=offline)
+copy .env.example .env           # Windows   (macOS / Linux: cp .env.example .env)
 uvicorn main:app --port 8000
-# new terminal
-cd frontend && npm install && cp .env.local.example .env.local && npm run dev
 ```
+Frontend, in a second terminal:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Then open http://localhost:3000/login.
+
+- `backend/.env` is optional. Without it (or with the copied example unchanged) Ledger runs with the offline
+  reader, and the sign-in page offers **Set up the admin** so you can create the admin account yourself.
+- To fix the admin in advance, fill in `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env` before the first start.
+- To read real invoices, scans and photos, set `LLM_PROVIDER` to `gemini`, `anthropic` or `openai` and add that key.
+- Every machine has its own database (`backend/data/`, not in git), so accounts and invoices are not shared
+  between teammates. Delete that folder to start from scratch.
+
 `GET /api/health` shows the active provider. **Never commit `backend/.env`.**
 
 ## Demo script (3 minutes)

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, isAuditor, postJson, User } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { LogoMark } from "@/components/Logo";
 import { useI18n } from "@/lib/i18n";
 
 type Mode = "signin" | "register" | "setup";
@@ -81,6 +82,9 @@ export default function Login() {
   return (
     <div className="page narrow">
       <form className="sheet signin" onSubmit={submit}>
+        <div className="signin-mark">
+          <LogoMark size={44} />
+        </div>
         {mode !== "setup" && (
           <div className="sides" role="tablist" aria-label={t("login.sides")}>
             {SIDES.map((s) => (

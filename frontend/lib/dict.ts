@@ -26,7 +26,7 @@ export const DICT: Record<string, Row> = {
   "nav.language": ["Language", "Dil", "Язык"],
   "nav.new_alerts": ["{n} new alerts", "{n} yeni xəbərdarlıq", "Новых оповещений: {n}"],
   "nav.waiting": ["{n} waiting for approval", "{n} nəfər təsdiq gözləyir", "Ожидают подтверждения: {n}"],
-  "nav.home": ["Ledger home", "Ledger ana səhifə", "Ledger, главная"],
+  "nav.home": ["PhysicalAI home", "PhysicalAI ana səhifə", "PhysicalAI, главная"],
   "nav.main": ["Main", "Əsas menyu", "Главное меню"],
   "skip": ["Skip to content", "Məzmuna keç", "Перейти к содержимому"],
 
@@ -56,9 +56,9 @@ export const DICT: Record<string, Row> = {
   "common.show": ["Show", "Göstər", "Показать"],
   "common.error": ["Something went wrong.", "Xəta baş verdi.", "Произошла ошибка."],
   "common.no_server": [
-    "Ledger's server can't be reached. Check that the backend is running.",
-    "Ledger serverinə qoşulmaq olmur. Backend-in işlədiyini yoxlayın.",
-    "Сервер Ledger недоступен. Проверьте, что backend запущен.",
+    "PhysicalAI's server can't be reached. Check that the backend is running.",
+    "PhysicalAI serverinə qoşulmaq olmur. Backend-in işlədiyini yoxlayın.",
+    "Сервер PhysicalAI недоступен. Проверьте, что backend запущен.",
   ],
   "common.request_failed": ["Request failed ({n}).", "Sorğu alınmadı ({n}).", "Запрос не выполнен ({n})."],
   "common.an_auditor": ["an auditor", "auditor", "аудитор"],
@@ -66,9 +66,9 @@ export const DICT: Record<string, Row> = {
   "common.unknown_vendor": ["Unknown vendor", "Naməlum satıcı", "Неизвестный поставщик"],
 
   "footer.policy": [
-    "Ledger checks invoices against the Nordvik Holdings expense policy.",
-    "Ledger fakturaları Nordvik Holdings xərc siyasətinə görə yoxlayır.",
-    "Ledger проверяет счета по политике расходов Nordvik Holdings.",
+    "PhysicalAI checks invoices against the Nordvik Holdings expense policy.",
+    "PhysicalAI fakturaları Nordvik Holdings xərc siyasətinə görə yoxlayır.",
+    "PhysicalAI проверяет счета по политике расходов Nordvik Holdings.",
   ],
   "footer.principle": [
     "The AI reads the document; the policy rules decide.",
@@ -82,21 +82,21 @@ export const DICT: Record<string, Row> = {
 
   "guard.wait_title": ["Waiting for the admin", "Admin təsdiqi gözlənilir", "Ожидается подтверждение админа"],
   "guard.wait_body": [
-    "You registered as an auditor. The Ledger admin has to approve that before you can see other people's invoices. This page opens by itself once they do; until then you can submit your own.",
-    "Siz auditor kimi qeydiyyatdan keçmisiniz. Başqalarının fakturalarını görməyiniz üçün Ledger admini bunu təsdiqləməlidir. Təsdiqdən sonra bu səhifə özü açılacaq; o vaxta qədər öz fakturalarınızı göndərə bilərsiniz.",
-    "Вы зарегистрировались как аудитор. Прежде чем вы увидите чужие счета, админ Ledger должен это подтвердить. После подтверждения страница откроется сама; пока вы можете отправлять свои счета.",
+    "You registered as an auditor. The PhysicalAI admin has to approve that before you can see other people's invoices. This page opens by itself once they do; until then you can submit your own.",
+    "Siz auditor kimi qeydiyyatdan keçmisiniz. Başqalarının fakturalarını görməyiniz üçün PhysicalAI admini bunu təsdiqləməlidir. Təsdiqdən sonra bu səhifə özü açılacaq; o vaxta qədər öz fakturalarınızı göndərə bilərsiniz.",
+    "Вы зарегистрировались как аудитор. Прежде чем вы увидите чужие счета, админ PhysicalAI должен это подтвердить. После подтверждения страница откроется сама; пока вы можете отправлять свои счета.",
   ],
   "guard.no_title": ["This page is for the audit team", "Bu səhifə audit komandası üçündür", "Эта страница для команды аудита"],
   "guard.no_body": [
-    "You are signed in as {name} ({role}). Ask the Ledger admin if you need access.",
-    "Siz {name} ({role}) kimi daxil olmusunuz. Giriş lazımdırsa, Ledger admininə müraciət edin.",
-    "Вы вошли как {name} ({role}). Если нужен доступ, обратитесь к админу Ledger.",
+    "You are signed in as {name} ({role}). Ask the PhysicalAI admin if you need access.",
+    "Siz {name} ({role}) kimi daxil olmusunuz. Giriş lazımdırsa, PhysicalAI admininə müraciət edin.",
+    "Вы вошли как {name} ({role}). Если нужен доступ, обратитесь к админу PhysicalAI.",
   ],
 
   // ---------------------------------------------------------------- sign-in and registration
   "login.side_employee": ["Employee", "İşçi", "Сотрудник"],
   "login.side_auditor": ["Audit team", "Audit komandası", "Команда аудита"],
-  "login.sides": ["Which side of Ledger", "Ledger-in hansı tərəfi", "Какая сторона Ledger"],
+  "login.sides": ["Which side of PhysicalAI", "PhysicalAI-nin hansı tərəfi", "Какая сторона PhysicalAI"],
   "login.does_employee": [
     "Submit your invoices and receipts and follow what happens to them.",
     "Faktura və qəbzlərinizi göndərin və onların vəziyyətini izləyin.",
@@ -111,16 +111,16 @@ export const DICT: Record<string, Row> = {
   "login.signin_auditor": ["Audit team sign-in", "Audit komandası girişi", "Вход для аудита"],
   "login.register_employee": ["Register as an employee", "İşçi kimi qeydiyyat", "Регистрация сотрудника"],
   "login.register_auditor": ["Register as an auditor", "Auditor kimi qeydiyyat", "Регистрация аудитора"],
-  "login.setup_title": ["Set up Ledger", "Ledger-i quraşdır", "Настройка Ledger"],
+  "login.setup_title": ["Set up PhysicalAI", "PhysicalAI-ni quraşdır", "Настройка PhysicalAI"],
   "login.setup_body": [
-    "Ledger has no admin yet. Create the admin account: the one person who manages everyone else's access.",
-    "Ledger-də hələ admin yoxdur. Admin hesabını yaradın: hamının girişini idarə edən tək şəxs.",
-    "В Ledger пока нет админа. Создайте учётную запись админа: единственного человека, который управляет доступом остальных.",
+    "PhysicalAI has no admin yet. Create the admin account: the one person who manages everyone else's access.",
+    "PhysicalAI-da hələ admin yoxdur. Admin hesabını yaradın: hamının girişini idarə edən tək şəxs.",
+    "В PhysicalAI пока нет админа. Создайте учётную запись админа: единственного человека, который управляет доступом остальных.",
   ],
   "login.approval_notice": [
-    "Auditors can clear invoices for payment, so the Ledger admin confirms each auditor. Until they do, your account works as an employee account.",
-    "Auditorlar fakturaları ödənişə buraxa bilir, ona görə hər auditoru Ledger admini təsdiqləyir. Təsdiqə qədər hesabınız işçi hesabı kimi işləyəcək.",
-    "Аудиторы могут допускать счета к оплате, поэтому каждого аудитора подтверждает админ Ledger. До подтверждения учётная запись работает как запись сотрудника.",
+    "Auditors can clear invoices for payment, so the PhysicalAI admin confirms each auditor. Until they do, your account works as an employee account.",
+    "Auditorlar fakturaları ödənişə buraxa bilir, ona görə hər auditoru PhysicalAI admini təsdiqləyir. Təsdiqə qədər hesabınız işçi hesabı kimi işləyəcək.",
+    "Аудиторы могут допускать счета к оплате, поэтому каждого аудитора подтверждает админ PhysicalAI. До подтверждения учётная запись работает как запись сотрудника.",
   ],
   "login.name": ["Full name", "Ad və soyad", "Имя и фамилия"],
   "login.email": ["Work email", "İş e-poçtu", "Рабочая почта"],
@@ -137,7 +137,7 @@ export const DICT: Record<string, Row> = {
     "Админ входит здесь же, со своей почтой и паролем.",
   ],
   "login.already": ["Already registered?", "Artıq qeydiyyatdan keçmisiniz?", "Уже зарегистрированы?"],
-  "login.no_admin": ["Ledger has no admin account yet.", "Ledger-də hələ admin hesabı yoxdur.", "В Ledger пока нет записи админа."],
+  "login.no_admin": ["PhysicalAI has no admin account yet.", "PhysicalAI-da hələ admin hesabı yoxdur.", "В PhysicalAI пока нет записи админа."],
   "login.setup_link": ["Set up the admin", "Admini quraşdır", "Создать админа"],
   "login.failed": ["That didn't work. Try again.", "Alınmadı. Yenidən cəhd edin.", "Не получилось. Попробуйте ещё раз."],
 
@@ -148,9 +148,9 @@ export const DICT: Record<string, Row> = {
     "Каждый счёт проверяется по политике до оплаты.",
   ],
   "home.lede": [
-    "Employees send their invoice as a PDF. Ledger reads it, applies the expense policy, and alerts the audit team when a rule is broken, naming the rule and showing the numbers.",
-    "İşçilər fakturanı PDF kimi göndərir. Ledger onu oxuyur, xərc siyasətini tətbiq edir və qayda pozulanda audit komandasına xəbər verir: hansı qayda və hansı rəqəmlərlə.",
-    "Сотрудники отправляют счёт в PDF. Ledger читает его, применяет политику расходов и оповещает аудит, если правило нарушено: какое правило и с какими цифрами.",
+    "Employees send their invoice as a PDF. PhysicalAI reads it, applies the expense policy, and alerts the audit team when a rule is broken, naming the rule and showing the numbers.",
+    "İşçilər fakturanı PDF kimi göndərir. PhysicalAI onu oxuyur, xərc siyasətini tətbiq edir və qayda pozulanda audit komandasına xəbər verir: hansı qayda və hansı rəqəmlərlə.",
+    "Сотрудники отправляют счёт в PDF. PhysicalAI читает его, применяет политику расходов и оповещает аудит, если правило нарушено: какое правило и с какими цифрами.",
   ],
   "home.cta_audit": ["Open the audit desk", "Audit masasını aç", "Открыть стол аудита"],
   "home.cta_register": ["Register", "Qeydiyyat", "Регистрация"],
@@ -286,7 +286,7 @@ export const DICT: Record<string, Row> = {
   "submit.by": ["Submitted by", "Göndərən", "Отправитель"],
   "submit.currency": ["Invoice currency", "Faktura valyutası", "Валюта счёта"],
   "submit.currency_auto": ["As printed on the invoice", "Fakturada yazıldığı kimi", "Как указано в счёте"],
-  "submit.accepts": ["Ledger accepts {list}.", "Ledger {list} qəbul edir.", "Ledger принимает {list}."],
+  "submit.accepts": ["PhysicalAI accepts {list}.", "PhysicalAI {list} qəbul edir.", "PhysicalAI принимает {list}."],
   "submit.rates": [
     "Limits are in {cur}, so other currencies are converted at the fixed policy rates: {rates}.",
     "Limitlər {cur} ilədir, ona görə digər valyutalar sabit məzənnə ilə çevrilir: {rates}.",
@@ -320,9 +320,9 @@ export const DICT: Record<string, Row> = {
     "Читаем {file} и проверяем по 5 правилам политики…",
   ],
   "submit.dup": [
-    "This invoice is already in Ledger, so it was not submitted again.",
-    "Bu faktura artıq Ledger-dədir, ona görə yenidən göndərilmədi.",
-    "Этот счёт уже есть в Ledger, поэтому повторно он не отправлен.",
+    "This invoice is already in PhysicalAI, so it was not submitted again.",
+    "Bu faktura artıq PhysicalAI-dadır, ona görə yenidən göndərilmədi.",
+    "Этот счёт уже есть в PhysicalAI, поэтому повторно он не отправлен.",
   ],
   "submit.see_my": ["See my invoices", "Fakturalarıma bax", "Мои счета"],
   "submit.different": ["Submit a different invoice", "Başqa faktura göndər", "Отправить другой счёт"],
@@ -426,7 +426,7 @@ export const DICT: Record<string, Row> = {
     "Выберите счёт, чтобы увидеть причину, исходный документ и кнопки решения.",
   ],
   "audit.toast": ["{status}: invoice from {name}", "{status}: {name} faktura göndərdi", "{status}: счёт от {name}"],
-  "audit.tab": ["Audit desk — Ledger", "Audit masası — Ledger", "Стол аудита — Ledger"],
+  "audit.tab": ["Audit desk — PhysicalAI", "Audit masası — PhysicalAI", "Стол аудита — PhysicalAI"],
   "audit.n_on": ["Desktop alerts turned on", "Masaüstü bildirişlər yandırıldı", "Уведомления включены"],
   "audit.n_on_b": [
     "You'll be notified even when this tab is in the background.",

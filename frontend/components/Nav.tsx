@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Icon, { Avatar } from "@/components/Icon";
+import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import { AlertSummary, api, isAuditor, Role } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -74,8 +75,7 @@ export default function Nav() {
       </a>
       <div className="nav-top">
         <Link href="/" className="wordmark" aria-label={t("nav.home")}>
-          <span className="wordmark-rule" aria-hidden />
-          Ledger
+          <Logo />
         </Link>
         <div className="nav-user">
           <LanguageSwitch />

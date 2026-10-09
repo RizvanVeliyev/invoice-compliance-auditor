@@ -120,7 +120,7 @@ function AuditDesk() {
             toast({ title, body, tone: n.status, href: `/audit?id=${n.id}` });
             try {
               if (notifyOn && document.hidden && Notification.permission === "granted") {
-                new Notification(`Ledger: ${title}`, { body });
+                new Notification(`PhysicalAI: ${title}`, { body });
               }
             } catch {
               /* notifications unsupported */

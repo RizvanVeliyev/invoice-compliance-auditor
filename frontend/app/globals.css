@@ -2462,6 +2462,107 @@ select {
   opacity: 0.75;
 }
 
+/* ---------------------------------------------------------------- brand and finishing touches */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.logo-mark {
+  flex: none;
+  filter: drop-shadow(0 2px 3px rgba(24, 38, 31, 0.22));
+  transition: transform 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.wordmark:hover .logo-mark {
+  transform: translateY(-2px) rotate(-4deg);
+}
+.logo-paper {
+  fill: var(--carbon);
+}
+.logo-line {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.logo-check {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.logo-word {
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+}
+.logo-ai {
+  margin-left: 1px;
+  color: var(--carbon);
+}
+.signin-mark {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 4px;
+  border-radius: 50%;
+  background: var(--carbon-soft);
+}
+.btn-primary,
+.btn-ok {
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18), 0 8px 16px -10px var(--carbon);
+}
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.sheet {
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.mine-row:hover,
+.tile:hover {
+  box-shadow: 0 1px 0 var(--rule), 0 22px 34px -22px rgba(24, 38, 31, 0.6);
+}
+.hero h1 {
+  background: linear-gradient(100deg, var(--ink) 55%, var(--carbon));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.steps li {
+  padding: 18px;
+  border: 1px solid var(--edge);
+  border-top: 3px solid var(--carbon);
+  border-radius: 8px;
+  background: var(--sheet);
+  box-shadow: var(--shadow);
+}
+.policy li {
+  padding: 12px 14px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--sheet);
+  margin-bottom: 8px;
+}
+.filter-n {
+  border-radius: 999px;
+  padding: 0 8px;
+}
+::selection {
+  background: var(--carbon);
+  color: var(--on-accent);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+}
+
 /* ---------------------------------------------------------------- toasts */
 .toasts {
   position: fixed;

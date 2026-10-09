@@ -59,14 +59,16 @@ Link to the repository and a 2-minute recording.
   injection, forged approvals.
 - **Comparison with the current approach:** a spreadsheet-style amount filter gets **14 / 36** on the same
   cases and cites 16 of 29 violations; FiscalAI cites 29 of 29.
-- **77 / 77** automated tests: roles and sessions, duplicate refusal, decision history, filters and paging,
+- **79 / 79** automated tests: roles and sessions, duplicate refusal, decision history, filters and paging,
   reports, export, the assistant (including that an employee cannot ask about a colleague's invoice) and
   email notifications.
-- **Examples of failures, shown honestly** (24 are listed in `QUALITY_TESTING.md`): a note saying
+- **Examples of failures, shown honestly** (26 are listed in `QUALITY_TESTING.md`): a note saying
   "pre-cleared by the Finance Director" could once approve a 4800 AZN payment; a flight was judged as a
   900 AZN hotel night; a refund of −240 was flagged as a 240 AZN meal; a second auditor could overwrite a
   decision without a trace. Each one has a fix and a test.
-- *Live-LLM results: strict-pass count on all 42 cases including the 6 free-text ones, with the model named.*
+- **Live model: 13 / 13** of the cases that ran: all 6 free-text cases (Azerbaijani, Russian, email, itemised
+  total, vendor typo, prompt injection) on gemini-3.6-flash and 7 template cases on gemini-3.8-flash. Median
+  5.5 s per invoice. 29 template cases were not run live: the free tier allows 20 requests a day.
 - State plainly what the offline numbers prove (the decision logic) and what they do not (how well a model
   reads a messy scan).
 
@@ -74,7 +76,8 @@ Link to the repository and a 2-minute recording.
 - **Data needed:** the company's expense policy as one JSON file (limits, tiers, vendors, rates) and the
   invoices themselves. No training data, no history.
 - **Running cost:** one model call per invoice; a PDF with a text layer is read locally first, and a
-  duplicate file is refused before any model call. *Cost per invoice from the live run: tokens × price.*
+  duplicate file is refused before any model call. Measured: $0.00102 per invoice, about **$1.02 per 1,000
+  invoices** (gemini-3.6-flash).
 - **Deployment:** two processes (FastAPI + Next.js) and a SQLite file; runs on one small server inside the
   company network. Any of three model providers, or none for template documents.
 - **Clear next step:** pilot with one finance team on real invoices for two weeks, measuring time per invoice
@@ -95,10 +98,10 @@ Link to the repository and a 2-minute recording.
   overwritten, and each invoice carries an append-only history.
 
 ## 9. What it is built with, and its limits
-- **Models:** one of Gemini, Claude or GPT for reading invoices, chosen in configuration. *Name the one used
-  in the demo and in the live test run.* The verdict is never produced by a model.
+- **Models:** Google Gemini (gemini-3.6-flash in the demo and the free-text run; gemini-3.8-flash in the first
+  run) reads invoices. Claude or GPT can be configured instead. The verdict is never produced by a model.
 - **Data:** synthetic invoices and a fictional company policy. No real or personal data.
 - **Components:** FastAPI, Pydantic, pypdf, SQLite, Next.js, React, TypeScript.
-- **Limits:** live-LLM accuracy and cost not yet measured; approvals are checked against the document, not
+- **Limits:** the live run covers 13 of 42 cases; approvals are checked against the document, not
   against the approver's mailbox; fixed exchange rates for USD and EUR only; FiscalAI's own accounts rather
   than company sign-on; the engine's explanations are in English in every interface language.

@@ -145,7 +145,9 @@ def _with_retry(call):
             return call()
         except Exception as e:  # noqa: BLE001 - each SDK has its own error classes; look at the status
             code = getattr(e, "code", None) or getattr(e, "status_code", None)
-            if wait is None or code not in (429, 500, 503):
+            # A used-up daily or billing quota will not come back in seconds: waiting only burns more requests.
+            out_of_quota = code == 429 and "exceeded your current quota" in str(e).lower()
+            if wait is None or code not in (429, 500, 503) or out_of_quota:
                 raise
             time.sleep(wait)
 

@@ -27,15 +27,16 @@ POLICY = json.loads((BASE / "policy.json").read_text(encoding="utf-8"))
 CASES = json.loads((BASE / "test_cases.json").read_text(encoding="utf-8"))
 
 
-def run(provider: str):
+def run(provider: str, only_llm: bool = False):
     rows = []
-    for i, c in enumerate(CASES, 1):
+    cases = [c for c in CASES if c["llm_only"]] if only_llm else CASES
+    for i, c in enumerate(cases, 1):
         text = (BASE / c["file"]).read_text(encoding="utf-8")
         row = {"case": c, "error": None, "skipped": False}
         if provider == "offline" and c["llm_only"]:
             row["skipped"] = True
             rows.append(row)
-            print(f"[{i:2d}/{len(CASES)}] {c['id']:<34} SKIP (needs a real LLM)")
+            print(f"[{i:2d}/{len(cases)}] {c['id']:<34} SKIP (needs a real LLM)")
             continue
         t0 = time.perf_counter()
         try:
@@ -49,11 +50,11 @@ def run(provider: str):
             bs, br = baseline_naive.naive_status(text)
             row.update(base_status=bs, base_rules=sorted(br))
         if row["error"]:
-            print(f"[{i:2d}/{len(CASES)}] {c['id']:<34} ERROR {row['error'][:60]}")
+            print(f"[{i:2d}/{len(cases)}] {c['id']:<34} ERROR {row['error'][:60]}")
         else:
             ok = row["actual_status"] == c["expected_status"] and row["actual_rules"] == sorted(c["expected_rule_ids"])
             row["ok"] = ok
-            print(f"[{i:2d}/{len(CASES)}] {c['id']:<34} {'PASS' if ok else 'FAIL'}")
+            print(f"[{i:2d}/{len(cases)}] {c['id']:<34} {'PASS' if ok else 'FAIL'}")
         rows.append(row)
         if provider != "offline":
             # Free-tier keys allow only a few calls a minute; a rate-limit error would count as a failed case.
@@ -61,7 +62,7 @@ def run(provider: str):
     return rows
 
 
-def report(rows, provider):
+def report(rows, provider, suffix=""):
     ran = [r for r in rows if not r["skipped"]]
     passed = [r for r in ran if r.get("ok")]
     det = [r for r in ran if not r["case"]["llm_only"]]
@@ -115,14 +116,16 @@ def report(rows, provider):
         c = r["case"]
         L.append(f"- `{c['id']}`: expected {c['expected_status']} {c['expected_rule_ids']}; "
                  + (f"error: {r['error']}" if r["error"] else f"got {r['actual_status']} {r['actual_rules']}. {r['notes']}"))
-    (BASE / "quality_test_report.md").write_text("\n".join(L), encoding="utf-8")
-    (BASE / "quality_test_results.json").write_text(json.dumps(
+    (BASE / f"quality_test_report{suffix}.md").write_text("\n".join(L), encoding="utf-8")
+    (BASE / f"quality_test_results{suffix}.json").write_text(json.dumps(
         [{k: v for k, v in r.items() if k != "case"} | {"id": r["case"]["id"]} for r in rows], indent=2), encoding="utf-8")
-    print(f"\n{len(passed)}/{len(ran)} strict pass. Report: quality_test_report.md")
+    print(f"\n{len(passed)}/{len(ran)} strict pass. Report: quality_test_report{suffix}.md")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--provider", default=os.environ.get("LLM_PROVIDER", "gemini"))
+    ap.add_argument("--only-llm", action="store_true", help="run only the free-text cases that need a model")
+    ap.add_argument("--suffix", default="", help="added to the report file names, for example _live")
     a = ap.parse_args()
-    report(run(a.provider), a.provider)
+    report(run(a.provider, a.only_llm), a.provider, a.suffix)

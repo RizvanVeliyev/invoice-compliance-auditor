@@ -274,7 +274,7 @@ backend/
   llm_providers.py     Gemini / Claude / GPT extraction;  offline_extractor.py  the no-key reader
   policy.json          rules, tiers, vendors, currencies and rates
   test_cases.json      42 quality cases;  run_quality_tests.py  the strict runner;  baseline_naive.py  the comparison
-  tests/               77 automated tests
+  tests/               79 automated tests
   sample_pdfs/, sample_invoices/, additional_test_invoices/, llm_robustness_invoices/
 frontend/
   app/                 login, submit, my, audit, employees, overview, users, account, check
@@ -292,20 +292,24 @@ no real or personal data is used.
 ```bash
 cd backend
 pip install -r requirements-dev.txt
-python -m pytest -q tests                        # 77 tests
+python -m pytest -q tests                        # 79 tests
 python run_quality_tests.py --provider offline   # 36 deterministic cases, no key needed
-python run_quality_tests.py                      # all 42 cases with your live LLM (adds 6 free-text/multilingual/injection cases)
+python run_quality_tests.py --only-llm --suffix _live   # the 6 free-text/multilingual/injection cases with your live model
+python run_quality_tests.py                      # all 42 cases live (needs a quota of well over 42 requests)
 cd ../frontend
 npx tsc --noEmit && npm run build                # type check and production build
 ```
 Strict scoring: a quality case passes only if the **status and the exact set of cited rule IDs** match.
-Latest run: **77/77** tests, **36/36** offline cases (the spreadsheet-style baseline gets 14/36), clean type
-check and build. See `QUALITY_TESTING.md` for what was and was not measured, the failures found and the
-known limits; `QUALITY_TEST_REPORT_OFFLINE.md` is the full per-case table.
+Latest run: **79/79** tests, **36/36** offline cases (the spreadsheet-style baseline gets 14/36), clean type
+check and build. **Live model: 13/13** of the cases that ran, including all 6 free-text ones (Azerbaijani,
+Russian, email, itemised total, vendor typo, prompt injection); median 5.5 s and about $1.02 per 1,000 invoices
+on `gemini-3.6-flash`. 29 template cases were not run live because of the free tier's daily quota.
+See `QUALITY_TESTING.md` for what was and was not measured, the failures found and the known limits;
+`QUALITY_TEST_REPORT_OFFLINE.md` and `QUALITY_TEST_REPORT_LIVE.md` are the per-case tables.
 
 ## Limitations (honest list)
-- Live-LLM accuracy, latency and cost per invoice have not been measured yet: every result above uses the
-  offline reader, which proves the decision logic, not the model's reading of messy documents.
+- The live-model numbers are from 13 synthetic invoices (6 free-text, 7 template) on a free-tier key; 29 template cases and scanned images have no scored live result yet.
+- A free Gemini key allows about 20 requests a day per model, which is enough for a demo, not for real use.
 - Without a model the assistant understands a fixed set of topics (listed above) and says so when a question is outside them. Its model path has not been tried with a real key.
 - Emails are plain text, sent once with no retry, only for a clear / reject decision.
 - The product is called FiscalAI in the interface; some server messages, the audit-log database and configuration names (for example the `ledger-data` Docker volume) still use the earlier working name, Ledger.

@@ -14,7 +14,8 @@ Last run: 9 October 2026, on the code in this repository (policy v2.5).
 | Email notification, real delivery | one decision sent through Gmail SMTP to the developer's own address | accepted by the mail server |
 | Browser run (three roles, three languages, both themes, phone width) | scripted with a headless browser | no console errors, no horizontal overflow |
 | Fresh-clone run, as a teammate would | clean clone, copied `.env.example` | starts, admin setup works, sample invoice judged correctly |
-| Live-LLM extraction (accuracy, latency, cost) | `python run_quality_tests.py` with a key | **not measured yet** |
+| Live model, the 6 free-text cases | `python run_quality_tests.py --only-llm --suffix _live` (gemini-3.6-flash) | **6 / 6 pass**, median 5.5 s, $0.00102 per invoice |
+| Live model, template cases | `python run_quality_tests.py` (gemini-3.8-flash) | **7 / 7 pass** of the 7 that ran; 29 not run (free-tier quota of 20 requests a day) |
 | Docker build | `docker compose up --build` | **not verified** (Docker would not start on the test machine) |
 | Manual baseline (people checking invoices by hand) | `manual_baseline_template.csv` | **not measured yet** |
 
@@ -71,13 +72,29 @@ The assistant was exercised the same way: opened from the corner button, asked b
 suggestion chip in Azerbaijani, English and Russian; verdict badges and action links appeared as expected, the
 conversation survived a reload, Esc closed the panel, and on a phone it opened full screen without overflow.
 
+### Live model
+13 of 42 cases were run against a live model and **13 / 13 passed**: all 6 free-text cases (email prose, Azerbaijani receipt, Russian invoice, itemised total, vendor typo, prompt injection) on `gemini-3.6-flash`, and 7 template cases on `gemini-3.8-flash`.
+
+| | |
+|---|---|
+| Strict pass on what ran | 13 / 13 |
+| Median time per invoice (6 free-text cases) | 5.5 s (fastest 3.3 s, slowest 28.9 s) |
+| Tokens per invoice | about 820 in, 110 out |
+| Cost per invoice | $0.00102, about **$1.02 per 1,000 invoices** (gemini-3.6-flash at $0.75 / $3.75 per million tokens) |
+| Full table | `QUALITY_TEST_REPORT_LIVE.md` |
+
+What this does and does not show: the free-text cases are the ones a regex reader cannot do at all, and the model
+read every one correctly, including Azerbaijani and Russian, a total that had to be added up, and an injected
+instruction that had to be ignored. **29 template cases were not run live**: the first full run stopped after 7
+cases when the free tier's limit of 20 requests a day for that model was used up, so there is no live result for
+them, good or bad. The numbers come from 13 synthetic invoices and two model versions, which is a small sample.
+Scanned images were tried by hand in the app, not in this scored run.
+
 ## Not measured yet
+- **The 29 template cases against a live model**, and any live run on scanned images. Both need a key with a
+  larger quota.
 - **The assistant's model hand-off.** Questions the code does not recognise go to a model when one is configured;
   that path is covered only with a stubbed model, never a real key.
-- **Live-LLM extraction.** The 6 free-text cases, the strict-pass count with a real model, median latency and
-  cost per invoice. Run `python run_quality_tests.py` with `LLM_PROVIDER` and a key set, and
-  `PRICE_IN_PER_MTOK` / `PRICE_OUT_PER_MTOK` for the cost. Until then nothing here says how accurately a model
-  reads a scan, an email or an Azerbaijani receipt.
 - **A manual baseline.** Have 2–3 people check 10 of the invoices by hand and record time and errors in
   `manual_baseline_template.csv`; that gives the "minutes per invoice today" number the comparison lacks.
 - **The Docker build.** The Dockerfiles need no change for the new code (no new dependencies), but the build
@@ -142,6 +159,15 @@ conversation survived a reload, Esc closed the panel, and on a phone it opened f
     the word for "approval". A vendor question now answers only about vendors.
 24. **An assistant test expected the wrong number.** It assumed the over-limit hotel sample also lacked Manager
     approval; the sample has it, so EXP-4.1 fires once, not twice. The expectation was wrong, not the engine.
+
+25. **The full live run burned its quota on retries.** The model answered "busy" (503) often; our new retry
+    waited and tried again, and each attempt counted against a free-tier limit of 20 requests a day that we did
+    not know about. 7 cases completed, then every call failed with "quota exceeded" and the runner still waited
+    through three retries each, for over an hour. Fix: a used-up quota is no longer retried, the runner can run
+    only the cases that need a model (`--only-llm`), and a live run writes its own report instead of replacing
+    the offline one. The 35 quota errors were never counted as model failures.
+26. **Category words were English only.** A model reporting "otel" or "отель" would not have matched the hotel
+    rule. Azerbaijani and Russian words were added to `policy.json` before the live run.
 
 ## Known limits
 Approval claims are checked against the document text, not against the approver's email or signature; one policy;

@@ -9,7 +9,7 @@ Policy v2.5 · 42 cases defined · 36 run · 6 skipped (need a live LLM)
 | Method | Exact pass (status + rules) | Status only | Violations correctly cited |
 |---|---|---|---|
 | Amount-threshold filter (spreadsheet-style baseline) | 14/36 | 21/36 | 16/29 |
-| Ledger (extraction + rules engine) | 36/36 | 36/36 | 29/29 |
+| FiscalAI (extraction + rules engine) | 36/36 | 36/36 | 29/29 |
 
 The baseline checks only raw totals against category limits. It cannot divide by people or nights, check the vendor list, read approvals, handle currency or missing fields.
 

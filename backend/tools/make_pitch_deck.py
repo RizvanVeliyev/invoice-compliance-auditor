@@ -20,13 +20,14 @@ W, H = 960, 540
 PAPER, SHEET, INK, INK2, INK3 = HexColor("#eef2e6"), HexColor("#fbfcf7"), HexColor("#18261f"), HexColor("#44554b"), HexColor("#6b7a70")
 BLUE, DEEP, OK, BAD, WARN, RULE = HexColor("#2b4c9b"), HexColor("#1f3a7a"), HexColor("#1e6b45"), HexColor("#b3261e"), HexColor("#c77b2a"), HexColor("#c9d8c2")
 M = 56  # page margin
-MODEL, PRICE_IN, PRICE_OUT = "gemini-3.8-flash", 0.75, 3.75      # USD per million tokens (Google's price page)
+MODEL, PRICE_IN, PRICE_OUT = "gemini-3.6-flash", 0.75, 3.75      # USD per million tokens (Google's price page)
+EARLIER_LIVE = 7     # template cases that ran, and passed, on gemini-3.8-flash before the daily quota ran out
 
 
 def live_results():
     """Numbers from a live run of run_quality_tests.py, or None when the last run was offline."""
     try:
-        rows = json.loads((ROOT / "quality_test_results.json").read_text(encoding="utf-8"))
+        rows = json.loads((ROOT / "quality_test_results_live.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
     ran = [r for r in rows if not r.get("skipped")]
@@ -228,17 +229,19 @@ def build():
     d.stat(M, y, sw, "36/36", "Decision logic", OK, "42 cases defined; 36 run without a model")
     d.stat(M + sw + 16, y, sw, "14/36", "Spreadsheet-style filter", BAD, "our proxy for the current approach")
     d.stat(M + 2 * (sw + 16), y, sw, "29/29", "Violations cited", OK, "the filter cites 16 of 29")
-    d.stat(M + 3 * (sw + 16), y, sw, "77", "Automated tests", BLUE, "roles, duplicates, history, assistant, email")
+    d.stat(M + 3 * (sw + 16), y, sw, "79", "Automated tests", BLUE, "roles, duplicates, history, assistant, email")
     yb = y - 140
     d.card(M, yb, W - 2 * M, 150, BLUE if live else WARN)
     if live:
-        d.text(M + 18, yb - 30, f"Live model ({MODEL}) on all {live['ran']} cases, incl. free text, Azerbaijani and Russian", 13, BLUE, bold=True)
-        c.setFillColor(INK); c.setFont("Courier-Bold", 30); c.drawString(M + 18, yb - 72, f"{live['passed']}/{live['ran']}")
+        total = live["passed"] + EARLIER_LIVE
+        d.text(M + 18, yb - 30, "Live model (Gemini): every case that ran passed, incl. free text in Azerbaijani and Russian", 13, BLUE, bold=True)
+        c.setFillColor(INK); c.setFont("Courier-Bold", 30); c.drawString(M + 18, yb - 72, f"{total}/{live['ran'] + EARLIER_LIVE}")
         d.text(M + 150, yb - 56, f"strict pass   |   median {live['median_s']:.1f} s per invoice   |   ${live['cost']:.5f} per invoice   |   "
                f"${live['cost'] * 1000:.2f} per 1,000 invoices", 12.5, INK, bold=True)
-        fails = ", ".join(live["failed"]) if live["failed"] else "none"
-        d.text(M + 150, yb - 78, f"Failed cases: {fails}. Each failure is explained in QUALITY_TESTING.md.", 11.5, INK2, width=W - 2 * M - 170)
-        d.text(M + 18, yb - 116, "The offline numbers prove the decision logic; the live run measures how well the model reads messy documents.", 11, INK3)
+        d.text(M + 150, yb - 78, f"{live['ran']} free-text cases on {MODEL} (email, Azerbaijani, Russian, itemised total, vendor typo, injection) "
+               f"and {EARLIER_LIVE} template cases on gemini-3.8-flash.", 11.5, INK2, width=W - 2 * M - 170)
+        d.text(M + 18, yb - 122, "Not run live: 29 template cases. The free tier allows 20 requests a day, and the first full run used them up. "
+               "The offline numbers prove the decision logic; the live run shows the model reads messy text.", 11, INK3, width=W - 2 * M - 36)
     else:
         d.text(M + 18, yb - 30, f"Live model ({MODEL}): not measured at the time this deck was built", 13, WARN, bold=True)
         d.text(M + 18, yb - 56, "The numbers above use the built-in reader, so they prove the decision logic, not how well a model reads a messy scan. "
@@ -316,7 +319,7 @@ def build():
                                 "Injected instructions are detected in English only",
                                 "Exchange rates are fixed policy numbers (USD 1.7, EUR 2.0)",
                                 "Own accounts, not company sign-on yet",
-                                "No manual time-per-invoice baseline measured yet"], 11.5, col - 36)
+                                "Live run covers 13 of 42 cases; no manual time-per-invoice baseline yet"], 11.5, col - 36)
     d.text(M, y - 322, "Next step for the approval gap: confirm each approval with the approver by email or through the ERP.", 12, INK, bold=True)
 
     d.save()

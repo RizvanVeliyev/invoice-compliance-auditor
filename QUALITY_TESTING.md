@@ -5,12 +5,13 @@ Last run: 9 October 2026, on the code in this repository (policy v2.5).
 ## Results at a glance
 | What | How to run it | Result |
 |---|---|---|
-| Automated tests (API, engine, accounts, duplicates, reports) | `cd backend && python -m pytest -q tests` | **67 / 67 pass** |
+| Automated tests (API, engine, accounts, duplicates, reports, assistant, email) | `cd backend && python -m pytest -q tests` | **77 / 77 pass** |
 | Quality cases, strict scoring, offline reader | `python run_quality_tests.py --provider offline` | **36 / 36 pass** (6 more need a live LLM) |
 | Same 36 cases, spreadsheet-style amount filter | printed by the same runner | 14 / 36 |
 | Frontend type check | `cd frontend && npx tsc --noEmit` | clean |
 | Frontend production build | `npm run build` | 13 pages built, no errors |
-| Translations | every key used in the code exists in all three languages | 413 entries, none missing, placeholders match |
+| Translations | every key used in the code exists in all three languages | 447 entries, none missing, placeholders match |
+| Email notification, real delivery | one decision sent through Gmail SMTP to the developer's own address | accepted by the mail server |
 | Browser run (three roles, three languages, both themes, phone width) | scripted with a headless browser | no console errors, no horizontal overflow |
 | Fresh-clone run, as a teammate would | clean clone, copied `.env.example` | starts, admin setup works, sample invoice judged correctly |
 | Live-LLM extraction (accuracy, latency, cost) | `python run_quality_tests.py` with a key | **not measured yet** |
@@ -19,7 +20,7 @@ Last run: 9 October 2026, on the code in this repository (policy v2.5).
 
 ## What was tested
 
-### Quality cases: does Ledger reach the right verdict, for the right reason?
+### Quality cases: does FiscalAI reach the right verdict, for the right reason?
 - **42 cases** in `backend/test_cases.json`: 36 template-format cases and 6 free-text cases that need a real LLM
   (email prose, Azerbaijani receipt, Russian invoice, multi-line items with no printed total, vendor typo,
   prompt injection in free text).
@@ -41,13 +42,13 @@ A spreadsheet-style filter (raw total against the category limit, flat 2000 cap)
 | Method | Exact pass | Status only | Violations correctly cited |
 |---|---|---|---|
 | Amount-threshold filter | 14/36 | 21/36 | 16/29 |
-| Ledger | 36/36 | 36/36 | 29/29 |
+| FiscalAI | 36/36 | 36/36 | 29/29 |
 
 The filter cannot divide by people or nights, check the vendor list, read approvals, convert currency or notice
 missing data. It is a proxy for "how this is done today", not a measurement of human reviewers.
 
 ### Automated tests: does the product around the verdict behave?
-67 tests in `backend/tests`:
+77 tests in `backend/tests`:
 
 | File | Tests | What they pin down |
 |---|---|---|
@@ -55,6 +56,8 @@ missing data. It is a proxy for "how this is done today", not a measurement of h
 | `test_review_fixes.py` | 17 | one regression test per defect found in review: forged approvals, flights judged as hotels, the offline approval parser, zero / negative / missing amounts, number formats, policy-driven waivers, audit-log failures, split-purchase warnings |
 | `test_auth.py` | 16 | nothing private without a session; each role limited to its own endpoints; one admin, never by registration or promotion; open and admin-approved auditor sign-up; passwords and session tokens not stored in the clear; lock after repeated wrong passwords; sign-out and deactivation end the session; nobody decides on their own invoice |
 | `test_submissions.py` | 16 | upload → verdict → alert → decision; scanned and fake files; USD and EUR invoices; the submitter's currency choice; **duplicates refused** (same file, same invoice in another file, caught before the model is called, no false positives, resubmission after rejection); the employee's own list; overview totals; CSV export with formula-safe cells |
+| `test_assistant.py` | 8 | the assistant: policy answers in three languages; planned expenses judged by the real engine (conversion, per-night and per-person maths, tiers); budgets in every currency; tips for fitting a limit; verdict tone and next-step links; **an employee cannot ask about a colleague's invoice or get company-wide rankings**; the fallback, the model hand-off and the rate limit |
+| `test_mail.py` | 2 | the employee is emailed on clear and on reject, with the right content, and not for notes or reopening; a missing or broken mail server never blocks a decision |
 | `test_audit_tools.py` | 6 | the decision history, internal notes hidden from the employee, one decision at a time, reopening needs a reason; search; **filters and paging** with the total count; the per-person spending report; the audit team's list of people |
 
 ### Checked in a real browser
@@ -64,7 +67,13 @@ and Russian, in the light and the dark theme, at desktop and phone width. With 3
 seeded, paging and each filter returned the expected rows (for example the currency filter left only USD
 invoices; currency plus search left two). No console errors and no horizontal overflow at 390 px.
 
+The assistant was exercised the same way: opened from the corner button, asked by typing, by topic card and by
+suggestion chip in Azerbaijani, English and Russian; verdict badges and action links appeared as expected, the
+conversation survived a reload, Esc closed the panel, and on a phone it opened full screen without overflow.
+
 ## Not measured yet
+- **The assistant's model hand-off.** Questions the code does not recognise go to a model when one is configured;
+  that path is covered only with a stubbed model, never a real key.
 - **Live-LLM extraction.** The 6 free-text cases, the strict-pass count with a real model, median latency and
   cost per invoice. Run `python run_quality_tests.py` with `LLM_PROVIDER` and a key set, and
   `PRICE_IN_PER_MTOK` / `PRICE_OUT_PER_MTOK` for the cost. Until then nothing here says how accurately a model
@@ -127,8 +136,15 @@ invoices; currency plus search left two). No console errors and no horizontal ov
 21. **The copied `.env.example` broke a fresh install.** It selected a model that needs an API key, so every upload
     failed to read. It now defaults to the offline reader; found by the fresh-clone run.
 
+22. **The assistant did not recognise "ПО".** The Russian abbreviation for software fell through to "other
+    expense", so "ПО 650 USD" missed the IT-approval rule. Found in the browser run; added with a test.
+23. **"Approved vendors" also printed the approval tiers**, because the Azerbaijani word for "approved" contains
+    the word for "approval". A vendor question now answers only about vendors.
+24. **An assistant test expected the wrong number.** It assumed the over-limit hotel sample also lacked Manager
+    approval; the sample has it, so EXP-4.1 fires once, not twice. The expectation was wrong, not the engine.
+
 ## Known limits
 Approval claims are checked against the document text, not against the approver's email or signature; one policy;
 fixed exchange rates for USD and EUR only; content-based duplicate detection depends on what the extractor read;
 scanned-document accuracy depends on the vision model; the sentences the engine writes about an invoice are in
-English in every interface language; synthetic data only.
+English in every interface language; without a model the assistant covers a fixed set of topics; synthetic data only.

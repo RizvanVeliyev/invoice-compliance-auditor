@@ -1,7 +1,7 @@
-# Ledger — Invoice Compliance Auditor
+# FiscalAI — Invoice Compliance Auditor
 
-Ledger is an internal tool for a company's expense process. Employees upload their invoices and receipts;
-Ledger checks each one against the expense policy in seconds and tells the audit team **which rule is
+FiscalAI is an internal tool for a company's expense process. Employees upload their invoices and receipts;
+FiscalAI checks each one against the expense policy in seconds and tells the audit team **which rule is
 broken, with the exact numbers**, or that a person must look (missing date, a currency the policy has no
 rate for, a category the policy does not cover). Auditors clear or reject, and everyone can see where the
 money went.
@@ -23,7 +23,9 @@ employee signs in, uploads PDF ──► duplicate? ──► LLM extraction ─
                                                                                                                ├─► SQLite audit log + stored file
                                                                                                                ├─► alert on the audit desk (/audit)
                                                                                                                └─► optional Slack/Teams/Discord webhook
-auditor signs in ──► audit desk: note / clear to pay / reject / reopen ──► employees, overview, CSV export
+auditor signs in ──► audit desk: note / clear to pay / reject / reopen ──► email to the employee
+                                                                      └─► employees, overview, CSV export
+anyone signed in ──► assistant: policy questions, "what if" checks, their own invoices
 ```
 
 ## Who uses it
@@ -51,6 +53,7 @@ themselves, and a decision cannot be silently overwritten: it has to be reopened
 | `/users` | Admin | Every account (search, role / active filter): roles, passwords, deactivation; auditor requests waiting for approval when that is switched on. |
 | `/account` | Any signed-in person | Their name, role and email; change their own password. |
 | `/check` | Any signed-in person | Paste invoice text to see how the policy treats it. Nothing is sent to the audit team. |
+| Assistant (button in the corner of every page) | Any signed-in person | A chat panel: ask about the policy, check a planned expense, ask about your invoices. See below. |
 
 **Languages and themes.** The whole interface is available in **Azerbaijani, English and Russian** (switch in
 the top bar; the choice is remembered, and the browser's language is used on a first visit) and in a **light
@@ -69,6 +72,26 @@ currency goes to a person. The model never converts anything.
 (3) the same vendor + amount + currency + date when no number separates them. It does not matter who sends
 it. Every refused attempt is recorded and shown on the overview. An invoice the auditor **rejected** can be
 sent again after it is fixed.
+
+**The assistant.** A chat panel on every page, in all three languages. It answers:
+- **policy questions:** "hotel limit", "which currencies?", "approved vendors", "who approves 2500 AZN?";
+- **a planned expense:** "hotel 900 AZN 2 nights" → `450 per night, limit 300, breaks EXP-1.2`, plus how to fit
+  the limit (`at most 600 AZN for 2 nights`); "software 650 USD" → `1,105 AZN, needs IT and Manager approval`;
+- **how much may I spend:** "max for hotel, 3 nights" → `900 AZN, that is 529.41 USD / 450 EUR`;
+- **your own invoices:** "my invoices", "my last invoice", "why #4", "spending by category", "what do I need to submit?";
+- **for the audit team:** "queue", "who spends the most?", "most broken rules", and any invoice by number.
+
+Every answer is computed by code from `policy.json` and the same rules engine that judges uploads, so the
+assistant works with no API key and cannot contradict the verdict an upload would get. Each answer carries a
+verdict (within policy / needs attention / breaks a rule) and a link that continues the task. When a model is
+configured, only questions the code does not recognise are passed to it, with the policy as context. The
+assistant is read-only, an employee can ask only about their own invoices, and there is a limit of 20 messages
+a minute per person.
+
+**Email.** When an auditor clears or rejects an invoice, the employee who submitted it gets an email (in
+Azerbaijani and English) with the invoice, the amount, who decided, the comment and a link. It needs the
+`SMTP_*` settings below; without them nothing is sent. Mail goes out in the background and a mail failure never
+blocks or undoes a decision.
 
 **What triggers an alert:** a **flagged** or **needs review** verdict, or an approved invoice with a warning
 (the name on the invoice is not the submitter, a possible split purchase, a file that was rejected before,
@@ -109,7 +132,7 @@ npm run dev
 ```
 Then open http://localhost:3000/login.
 
-- `backend/.env` is optional. Without it (or with the copied example unchanged) Ledger runs with the offline
+- `backend/.env` is optional. Without it (or with the copied example unchanged) FiscalAI runs with the offline
   reader, and the sign-in page offers **Set up the admin** so you can create the admin account yourself.
 - To fix the admin in advance, fill in `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env` before the first start.
 - To read real invoices, scans and photos, set `LLM_PROVIDER` to `gemini`, `anthropic` or `openai` and add that key.
@@ -134,7 +157,8 @@ audit log live in the `ledger-data` volume and survive restarts (`docker compose
 | `AUDITOR_EMAIL`, `AUDITOR_PASSWORD`, `AUDITOR_NAME` | A ready-made auditor account, created on first start |
 | `AUDITOR_SIGNUP` | `open` (default) or `approval` (the admin confirms each auditor) |
 | `COOKIE_SECURE` | `1` when served over https |
-| `ALERT_WEBHOOK_URL`, `APP_PUBLIC_URL` | Post each alert to Slack / Teams / Discord with a link to it |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_NAME` | Email the employee about the decision on their invoice. For Gmail: `smtp.gmail.com`, `587` and an app password |
+| `ALERT_WEBHOOK_URL`, `APP_PUBLIC_URL` | Post each alert to Slack / Teams / Discord; `APP_PUBLIC_URL` is also the link in emails |
 | `PRICE_IN_PER_MTOK`, `PRICE_OUT_PER_MTOK` | USD per million tokens, for a cost estimate per invoice |
 
 `GET /api/health` shows the active provider. **Never commit `backend/.env`.**
@@ -156,7 +180,9 @@ Use two browser windows (one normal, one private): the employee and the auditor.
    internal note, **Reject** with a comment, then **Reopen** it with a reason and clear it: the history shows
    every step. Employee: **My invoices** shows the decisions (never the internal notes) and their spending
    per month. Auditor: **Employees** shows the same report for any person.
-7. Auditor: filter the desk by currency or date and search by vendor; then **Overview**: totals in AZN, by
+7. Either window: open the **assistant** (round button, bottom right) and ask "hotel 900 AZN 2 nights",
+   "max for hotel, 3 nights" or "why #1"; as the auditor ask "who spends the most?".
+8. Auditor: filter the desk by currency or date and search by vendor; then **Overview**: totals in AZN, by
    currency, rules broken most often, duplicates refused, latest decisions; **Download all invoices (CSV)**.
 
 A clean invoice is approved without an alert only when the name on it matches the person who submits it
@@ -173,6 +199,8 @@ A clean invoice is approved without an alert only when the name on it matches th
 | Inputs | PDF/photo upload, pasted text; a PDF with a text layer is read locally (cheapest), a scanned PDF or image goes to the vision model |
 | Alerts | audit-desk queue with live polling, toasts, desktop notifications, unread count; optional webhook |
 | Audit tools | search, currency and date filters, paging; internal notes; clear / reject with a comment; reopening with a reason; an append-only history per invoice; nobody decides on their own invoice |
+| Assistant | chat panel in three languages: policy, planned expenses checked by the real engine, budgets in every currency, the person's invoices and spending; queue, top spenders and broken rules for auditors; works without an API key; read-only |
+| Email | the employee is told when their invoice is cleared or rejected (SMTP, optional) |
 | Reports | per person: spending per month, by category, top vendors (employees see their own, auditors see anyone's); overview across everyone; CSV export with formula-safe cells |
 | Interface | Azerbaijani / English / Russian, light and dark theme, works at phone width |
 | Safety | extraction prompt treats the invoice as untrusted; the verdict never comes from the model; approval claims verified against the document text by code; text addressed to an AI reviewer is reported and forces human review; CORS locked to the UI origin; size limits |
@@ -189,6 +217,7 @@ A clean invoice is approved without an alert only when the name on it matches th
 | `POST /submissions` | signed in | upload an invoice (`file`, `note`, `currency`); `409` for a duplicate |
 | `GET /my/submissions`, `GET /my/report?months=` | signed in | your invoices and your spending report |
 | `POST /analyze`, `POST /analyze-file` | signed in | quick check, nothing is stored as a submission |
+| `POST /chat` | signed in | the assistant: `{message, lang}` → `{text, tone, actions, suggestions, source}` |
 | `GET /submissions?status=&state=&q=&currency=&date_from=&date_to=&user_id=&page=&page_size=` | auditor | filtered, paged list; total in `X-Total-Count` |
 | `GET /submissions/{id}`, `GET /submissions/{id}/file` | auditor (file: also its owner) | one invoice with trace and history; the original document |
 | `POST /submissions/{id}/decision`, `/reopen`, `/notes` | auditor | clear or reject, reopen with a reason, add an internal note |
@@ -204,17 +233,19 @@ backend/
   main.py              API routes and access rules
   auth.py              accounts, sessions, roles
   submissions.py       uploads, duplicates, decisions, history, reports, export
+  assistant.py         the chat assistant (answers computed from the policy and the engine)
+  mailer.py            email to the employee about a decision
   service.py           extract -> evaluate -> audit log
   rules_engine.py      the deterministic policy engine
   approval_guard.py    code check of approval claims and injected instructions
   llm_providers.py     Gemini / Claude / GPT extraction;  offline_extractor.py  the no-key reader
   policy.json          rules, tiers, vendors, currencies and rates
   test_cases.json      42 quality cases;  run_quality_tests.py  the strict runner;  baseline_naive.py  the comparison
-  tests/               67 automated tests
+  tests/               77 automated tests
   sample_pdfs/, sample_invoices/, additional_test_invoices/, llm_robustness_invoices/
 frontend/
   app/                 login, submit, my, audit, employees, overview, users, account, check
-  components/          Nav, ResultView, Report, Pager, Stamp, Icon, ...
+  components/          Nav, ChatWidget, ResultView, Report, Pager, Stamp, Logo, Icon, ...
   lib/                 api.ts (calls), auth.tsx (session and guards), i18n.tsx + dict.ts (three languages)
 ```
 
@@ -228,22 +259,25 @@ no real or personal data is used.
 ```bash
 cd backend
 pip install -r requirements-dev.txt
-python -m pytest -q tests                        # 67 tests
+python -m pytest -q tests                        # 77 tests
 python run_quality_tests.py --provider offline   # 36 deterministic cases, no key needed
 python run_quality_tests.py                      # all 42 cases with your live LLM (adds 6 free-text/multilingual/injection cases)
 cd ../frontend
 npx tsc --noEmit && npm run build                # type check and production build
 ```
 Strict scoring: a quality case passes only if the **status and the exact set of cited rule IDs** match.
-Latest run: **67/67** tests, **36/36** offline cases (the spreadsheet-style baseline gets 14/36), clean type
+Latest run: **77/77** tests, **36/36** offline cases (the spreadsheet-style baseline gets 14/36), clean type
 check and build. See `QUALITY_TESTING.md` for what was and was not measured, the failures found and the
 known limits; `QUALITY_TEST_REPORT_OFFLINE.md` is the full per-case table.
 
 ## Limitations (honest list)
 - Live-LLM accuracy, latency and cost per invoice have not been measured yet: every result above uses the
   offline reader, which proves the decision logic, not the model's reading of messy documents.
+- Without a model the assistant understands a fixed set of topics (listed above) and says so when a question is outside them. Its model path has not been tried with a real key.
+- Emails are plain text, sent once with no retry, only for a clear / reject decision.
+- The product is called FiscalAI in the interface; some server messages, the audit-log database and configuration names (for example the `ledger-data` Docker volume) still use the earlier working name, Ledger.
 - Verified approvals: the system checks that an approval claim is really written on the record, but it cannot verify the email/signature behind it. Approvals read from images/scans cannot be checked against text and are marked "unverified".
-- Accounts are Ledger's own (email + password); there is no email verification, password-reset email or SSO. Anyone who can reach the site can register as an employee, so run it inside the company network or behind your SSO. By default a person who registers as an auditor is one at once; set `AUDITOR_SIGNUP=approval` wherever the sign-up page is reachable by people who should not have that.
+- Accounts are FiscalAI's own (email + password); there is no email verification, password-reset email or SSO. Anyone who can reach the site can register as an employee, so run it inside the company network or behind your SSO. By default a person who registers as an auditor is one at once; set `AUDITOR_SIGNUP=approval` wherever the sign-up page is reachable by people who should not have that.
 - Exchange rates are fixed numbers in the policy file, as the company set them; they are not market rates and are not dated.
 - Duplicate detection by content relies on the extracted vendor, invoice number, amount and date. Two genuinely different purchases with the same vendor, amount and date and no invoice number are treated as one; the message tells the employee to ask the audit team.
 - Filtering and paging are done by the server on the audit desk; on My invoices, Employees and Accounts they run in the browser over at most 500 rows.

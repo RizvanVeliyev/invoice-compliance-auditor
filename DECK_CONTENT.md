@@ -4,7 +4,7 @@ Numbers on these slides come from the run recorded in `QUALITY_TESTING.md`. Item
 be measured; do not present them with invented figures.
 
 ## 1. Title
-**Ledger: every invoice checked against policy before anyone pays it.**
+**FiscalAI: every invoice checked against policy before anyone pays it.**
 Every flag names the rule and shows the maths.
 
 ## 2. The user and the problem — Value for the user (25)
@@ -22,6 +22,8 @@ Every flag names the rule and shows the maths.
 - **Auditor:** sees only what needs a person, with the rule, the calculation and the original document side
   by side; clears or rejects in one click; every step is recorded.
 - **Management:** totals in AZN, by currency, by rule, by employee; CSV export.
+- **Everyone:** an assistant that answers "may I spend this?" before the money is spent, and an email the
+  moment a decision is made.
 
 ## 4. Live core scenario — Prototype and use of AI (30)
 Two windows side by side, employee and auditor:
@@ -33,7 +35,10 @@ Two windows side by side, employee and auditor:
 4. Employee sends **Forged approval note** → the instruction to the AI inside the PDF is reported and ignored.
 5. Auditor opens the hotel alert, adds an internal note, rejects with a comment; the employee sees it on
    **My invoices**. Auditor reopens it with a reason: the history shows every step.
-6. Switch the language (AZ / EN / RU) and the theme once, live.
+6. Open the assistant and ask "hotel 900 AZN 2 nights": it shows 450 per night against the 300 limit and
+   how to fit it (at most 600 AZN). Ask "max for hotel, 3 nights": 900 AZN = 529.41 USD = 450 EUR.
+7. Show the email the employee received about the rejection.
+8. Switch the language (AZ / EN / RU) and the theme once, live.
 
 Link to the repository and a 2-minute recording.
 
@@ -44,6 +49,8 @@ Link to the repository and a 2-minute recording.
   `policy.json`. Same input, same verdict, exact arithmetic.
 - **Why it matters:** text inside an invoice cannot talk its way to "approved". Even an approval the model
   reports is kept only if code finds that sentence in the document.
+- **The assistant follows the same rule:** its answers about limits and planned expenses are computed by the
+  rules engine, not generated, so it works without a model and never contradicts a real verdict.
 - Show the pipeline diagram from the README.
 
 ## 6. Quality testing (20)
@@ -51,10 +58,11 @@ Link to the repository and a 2-minute recording.
   boundaries, per-night and per-person maths, approval hierarchy, USD/EUR conversion, missing data, prompt
   injection, forged approvals.
 - **Comparison with the current approach:** a spreadsheet-style amount filter gets **14 / 36** on the same
-  cases and cites 16 of 29 violations; Ledger cites 29 of 29.
-- **67 / 67** automated tests: roles and sessions, duplicate refusal, decision history, filters and paging,
-  reports, export.
-- **Examples of failures, shown honestly** (21 are listed in `QUALITY_TESTING.md`): a note saying
+  cases and cites 16 of 29 violations; FiscalAI cites 29 of 29.
+- **77 / 77** automated tests: roles and sessions, duplicate refusal, decision history, filters and paging,
+  reports, export, the assistant (including that an employee cannot ask about a colleague's invoice) and
+  email notifications.
+- **Examples of failures, shown honestly** (24 are listed in `QUALITY_TESTING.md`): a note saying
   "pre-cleared by the Finance Director" could once approve a 4800 AZN payment; a flight was judged as a
   900 AZN hotel night; a refund of −240 was flagged as a 240 AZN meal; a second auditor could overwrite a
   decision without a trace. Each one has a fix and a test.
@@ -81,6 +89,8 @@ Link to the repository and a 2-minute recording.
 - Duplicates are **refused at upload**, including the same invoice re-scanned into a different file.
 - Fixed-rate currency conversion is part of the shown calculation, not a hidden step.
 - "Needs review" instead of a guess whenever data is missing or the policy is silent.
+- A policy assistant that **computes** instead of generating: "what if" answers come from the same engine as
+  the real verdict, in three languages, with no model required.
 - Separation of duties built in: nobody decides on their own invoice, a decision cannot be silently
   overwritten, and each invoice carries an append-only history.
 
@@ -90,5 +100,5 @@ Link to the repository and a 2-minute recording.
 - **Data:** synthetic invoices and a fictional company policy. No real or personal data.
 - **Components:** FastAPI, Pydantic, pypdf, SQLite, Next.js, React, TypeScript.
 - **Limits:** live-LLM accuracy and cost not yet measured; approvals are checked against the document, not
-  against the approver's mailbox; fixed exchange rates for USD and EUR only; Ledger's own accounts rather
+  against the approver's mailbox; fixed exchange rates for USD and EUR only; FiscalAI's own accounts rather
   than company sign-on; the engine's explanations are in English in every interface language.

@@ -8,7 +8,7 @@
       "input_tokens": 0,
       "output_tokens": 0
     },
-    "ms": 7,
+    "ms": 3,
     "notes": "",
     "base_status": "approved",
     "base_rules": [],
@@ -106,7 +106,7 @@
       "input_tokens": 0,
       "output_tokens": 0
     },
-    "ms": 1,
+    "ms": 0,
     "notes": "Category 'Office Equipment' has no dedicated policy rule, so compliance cannot be confirmed automatically.",
     "base_status": "approved",
     "base_rules": [],
@@ -331,7 +331,7 @@
       "input_tokens": 0,
       "output_tokens": 0
     },
-    "ms": 1,
+    "ms": 0,
     "notes": "Category 'Office Equipment' has no dedicated rule; accepted because the amount's approval tier is satisfied by documented approval. Approval evidence read from record: \"Finance Director (approval email on file\".",
     "base_status": "flagged",
     "base_rules": [

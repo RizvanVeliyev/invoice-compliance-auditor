@@ -11,6 +11,61 @@ import { useI18n } from "@/lib/i18n";
 // There is one admin account (yours); everyone else is an employee or an auditor.
 const ROLES: Role[] = ["employee", "auditor"];
 
+type MailStatus = { configured: boolean; via: string | null; from: string | null; detail: string | null };
+
+/** Whether employees get emails, and a way to prove it with one test message. */
+function MailCard({ defaultTo }: { defaultTo: string }) {
+  const { t } = useI18n();
+  const [status, setStatus] = useState<MailStatus | null>(null);
+  const [to, setTo] = useState(defaultTo);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    api<MailStatus>("/api/mail").then(setStatus).catch(() => setStatus(null));
+  }, []);
+
+  async function test(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setResult(null);
+    try {
+      const r = await postJson<{ ok: boolean; error: string | null }>("/api/mail/test", { to });
+      setResult({ ok: r.ok, text: r.ok ? t("mail.ok", { to }) : `${t("mail.failed")} ${r.error}` });
+    } catch (err) {
+      setResult({ ok: false, text: err instanceof Error ? err.message : t("common.error") });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!status) return null;
+  return (
+    <form className="sheet stack mail-card" onSubmit={test}>
+      <h2 className="h-sub">{t("mail.title")}</h2>
+      <p className={status.configured ? "clean" : "muted"}>
+        {status.configured ? t("mail.on", { detail: status.detail, from: status.from }) : t("mail.off")}
+      </p>
+      {status.configured && (
+        <>
+          <label className="fld">
+            <span>{t("mail.to")}</span>
+            <input type="email" value={to} onChange={(e) => setTo(e.target.value)} required />
+          </label>
+          <button className="btn btn-ghost" disabled={busy}>
+            {t(busy ? "mail.sending" : "mail.send")}
+          </button>
+        </>
+      )}
+      {result && (
+        <p className={result.ok ? "clean" : "form-error"} role="status">
+          {result.text}
+        </p>
+      )}
+    </form>
+  );
+}
+
 function Accounts() {
   const { user: me } = useAuth();
   const { t, ago, dateTime } = useI18n();
@@ -275,6 +330,7 @@ function Accounts() {
           <p className="hint">{t("users.hint")}</p>
         </section>
 
+        <div className="stack-lg">
         <form className="sheet stack" onSubmit={create} aria-labelledby="add">
           <h2 id="add" className="h-sub">
             {t("users.add")}
@@ -319,6 +375,8 @@ function Accounts() {
           </button>
           <p className="hint">{t("users.change_hint")}</p>
         </form>
+        <MailCard defaultTo={me?.email || ""} />
+        </div>
       </div>
     </div>
   );

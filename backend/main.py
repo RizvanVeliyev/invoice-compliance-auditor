@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 import assistant  # noqa: E402  (after load_dotenv so env vars are visible)
 import auth  # noqa: E402
+import mailer  # noqa: E402
 import service  # noqa: E402
 import submissions  # noqa: E402
 
@@ -207,6 +208,25 @@ class UserPatch(BaseModel):
 @app.get("/api/users")
 def users_list(_: dict = Depends(require_admin)):
     return auth.list_users()
+
+
+class MailTest(BaseModel):
+    to: str
+
+
+@app.get("/api/mail", dependencies=[Depends(require_admin)])
+def mail_status():
+    """Is email set up, and how it is sent. No secrets."""
+    return mailer.status()
+
+
+@app.post("/api/mail/test")
+def mail_test(body: MailTest, admin: dict = Depends(require_admin)):
+    """Send one test message now and report exactly what the mail service said."""
+    error = mailer.deliver(body.to, "FiscalAI: test e-poçtu / test email",
+                           f"Bu, FiscalAI-dən test məktubudur. Poçt bildirişləri işləyir.\n\n"
+                           f"This is a test message from FiscalAI. Email notifications work.\n\nSent by {admin['name']}.")
+    return {"ok": error is None, "error": error, **mailer.status()}
 
 
 @app.get("/api/users/pending")

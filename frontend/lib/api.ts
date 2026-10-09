@@ -110,7 +110,7 @@ export type TimelineEvent = {
   id: number;
   ts: string;
   user_name: string;
-  kind: "submitted" | "approved" | "rejected" | "reopened" | "note";
+  kind: "submitted" | "approved" | "rejected" | "reopened" | "note" | "email" | "email_failed";
   text: string;
 };
 

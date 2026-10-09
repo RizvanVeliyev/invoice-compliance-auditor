@@ -2067,6 +2067,15 @@ textarea {
 .timeline .ev-reopened::before {
   background: var(--warn-line);
 }
+.timeline .ev-email::before {
+  background: var(--ok);
+}
+.timeline .ev-email_failed::before {
+  background: var(--bad);
+}
+.mail-card .clean {
+  margin-top: 0;
+}
 .timeline .ev-note::before {
   background: var(--carbon);
 }

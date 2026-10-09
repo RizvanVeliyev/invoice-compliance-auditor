@@ -838,4 +838,18 @@ export const DICT: Record<string, Row> = {
     "Auditor girişiniz hələ təsdiqlənməyib. Hələlik İşçi vərəqindən daxil olun.",
     "Ваш доступ аудитора ещё не подтверждён. Пока войдите через вкладку «Сотрудник».",
   ],
+  "ev.email": ["emailed the employee", "işçiyə e-poçt göndərdi", "отправил(а) письмо сотруднику"],
+  "ev.email_failed": ["could not email the employee", "işçiyə e-poçt göndərə bilmədi", "не удалось отправить письмо сотруднику"],
+  "mail.title": ["Email notifications", "E-poçt bildirişləri", "Уведомления по почте"],
+  "mail.on": ["On. Sent via {detail} from {from}.", "Aktivdir. {detail} vasitəsilə, {from} ünvanından göndərilir.", "Включены. Отправка через {detail} с адреса {from}."],
+  "mail.off": [
+    "Off. Employees are not emailed about decisions. Add BREVO_API_KEY and MAIL_FROM (or the SMTP settings) on the server.",
+    "Söndürülüb. İşçilərə qərar barədə e-poçt getmir. Serverdə BREVO_API_KEY və MAIL_FROM (və ya SMTP ayarlarını) əlavə edin.",
+    "Выключены. Сотрудникам не приходят письма о решениях. Добавьте на сервере BREVO_API_KEY и MAIL_FROM (или настройки SMTP).",
+  ],
+  "mail.to": ["Send a test message to", "Test məktubunu bu ünvana göndər", "Отправить тестовое письмо на адрес"],
+  "mail.send": ["Send test", "Test göndər", "Отправить тест"],
+  "mail.sending": ["Sending…", "Göndərilir…", "Отправляем…"],
+  "mail.ok": ["The mail service accepted the test message for {to}.", "Poçt xidməti {to} üçün test məktubunu qəbul etdi.", "Почтовый сервис принял тестовое письмо для {to}."],
+  "mail.failed": ["The test message was not sent:", "Test məktubu göndərilmədi:", "Тестовое письмо не отправлено:"],
 };

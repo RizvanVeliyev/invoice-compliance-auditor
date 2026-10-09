@@ -33,7 +33,9 @@ def mail_on(monkeypatch):
     monkeypatch.setenv("SMTP_PASSWORD", "abcd efgh ijkl mnop")
     monkeypatch.setenv("APP_PUBLIC_URL", "https://fiscal.example")
     monkeypatch.setattr(mailer.smtplib, "SMTP", FakeSMTP)
-    monkeypatch.setattr(mailer, "send_async", mailer.send)        # send inline so the test can look
+    # Send inline, so the test can look at the message and at what was written into the history.
+    monkeypatch.setattr(mailer, "send_async",
+                        lambda to, s, b, done=None: (lambda e: done(e) if done else None)(mailer.deliver(to, s, b)))
 
 
 def test_employee_is_emailed_when_their_invoice_is_cleared_or_rejected(client, as_, submit, monkeypatch):
@@ -85,3 +87,78 @@ def test_no_mail_settings_or_a_broken_server_never_blocks_a_decision(client, as_
     client.post(f"/api/submissions/{sid}/reopen", json={"text": "again"})
     r = client.post(f"/api/submissions/{sid}/decision", json={"decision": "approved"})
     assert r.status_code == 200 and r.json()["decision"] == "approved"
+
+
+def test_automatic_approval_is_emailed_and_the_history_says_so(client, as_, submit, monkeypatch):
+    mail_on(monkeypatch)
+    client.post("/api/auth/register", json={"name": "Aysel Karimova", "email": "aysel@nordvik.test",
+                                            "password": "first-pass-1", "role": "employee"})
+    clean = submit("1-team-lunch-approved.pdf").json()             # named on the invoice: approved, no alert
+    assert clean["sent_to_audit"] is False
+    assert [m["To"] for m in FakeSMTP.sent] == ["aysel@nordvik.test"]
+    body = FakeSMTP.sent[0].get_content()
+    assert "approved automatically" in body and "avtomatik təsdiqləndi" in body and "390 AZN" in body
+    flagged = submit("2-hotel-over-limit.pdf").json()              # goes to an auditor: no mail until they decide
+    assert len(FakeSMTP.sent) == 1
+
+    events = client.get("/api/my/submissions").json()
+    assert [e["kind"] for e in next(s for s in events if s["id"] == clean["id"])["events"]] == ["submitted", "email"]
+
+    as_("auditor")
+    client.post(f"/api/submissions/{flagged['id']}/decision", json={"decision": "rejected", "comment": "No"})
+    kinds = [(e["kind"], e["user_name"], e["text"]) for e in client.get(f"/api/submissions/{flagged['id']}").json()["events"]]
+    assert kinds[-1] == ("email", "FiscalAI", "aysel@nordvik.test") and len(FakeSMTP.sent) == 2
+
+
+def test_a_failed_mail_is_recorded_for_the_audit_team_only(client, as_, submit, monkeypatch):
+    as_("employee")
+    sid = submit("2-hotel-over-limit.pdf").json()["id"]
+    mail_on(monkeypatch)
+
+    class Blocked:
+        def __init__(self, *a, **k):
+            raise TimeoutError("timed out")
+
+    monkeypatch.setattr(mailer.smtplib, "SMTP", Blocked)
+    as_("auditor")
+    done = client.post(f"/api/submissions/{sid}/decision", json={"decision": "approved"})
+    assert done.status_code == 200
+    last = client.get(f"/api/submissions/{sid}").json()["events"][-1]
+    assert last["kind"] == "email_failed" and "murad@nordvik.test" in last["text"]
+    assert "BREVO_API_KEY" in last["text"] and "block" in last["text"]          # says what to do about it
+    as_("employee")
+    assert "email_failed" not in [e["kind"] for e in client.get("/api/my/submissions").json()[0]["events"]]
+
+
+def test_https_mail_api_is_used_when_configured(client, as_, monkeypatch):
+    calls = []
+
+    class Answer:
+        def read(self):
+            return b'{"messageId": "1"}'
+
+    def fake_urlopen(req, timeout=None):
+        calls.append((req.full_url, dict(req.header_items()), req.data))
+        return Answer()
+
+    monkeypatch.setenv("BREVO_API_KEY", "xkeysib-test")
+    monkeypatch.setenv("MAIL_FROM", "sender@example.com")
+    monkeypatch.setattr(mailer.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(mailer.smtplib, "SMTP", lambda *a, **k: (_ for _ in ()).throw(AssertionError("SMTP used")))
+    assert mailer.status() == {"configured": True, "via": "api", "from": "sender@example.com", "detail": "Brevo HTTPS API"}
+    assert mailer.deliver("murad@nordvik.test", "Hello", "Body") is None
+    url, headers, data = calls[0]
+    assert url == "https://api.brevo.com/v3/smtp/email" and headers["Api-key"] == "xkeysib-test"
+    import json
+    sent = json.loads(data)
+    assert sent["sender"]["email"] == "sender@example.com" and sent["to"] == [{"email": "murad@nordvik.test"}]
+    assert sent["subject"] == "Hello" and sent["textContent"] == "Body"
+
+    as_("auditor")
+    assert client.get("/api/mail").status_code == 403 and client.post("/api/mail/test", json={"to": "a@b.cc"}).status_code == 403
+    as_("admin")
+    assert client.get("/api/mail").json()["via"] == "api"
+    assert client.post("/api/mail/test", json={"to": "a@b.cc"}).json()["ok"] is True and len(calls) == 2
+    monkeypatch.delenv("BREVO_API_KEY")
+    off = client.post("/api/mail/test", json={"to": "a@b.cc"}).json()
+    assert off["ok"] is False and off["configured"] is False and "not configured" in off["error"]

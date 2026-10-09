@@ -117,7 +117,9 @@ def sniff_mime(data: bytes, declared: str, filename: str) -> str:
                      f"'{filename or 'file'}' is not one of these.")
 
 
-EVENT_KINDS = {"submitted", "approved", "rejected", "reopened", "note"}
+EVENT_KINDS = {"submitted", "approved", "rejected", "reopened", "note", "email", "email_failed"}
+INTERNAL_EVENTS = {"note", "email_failed"}        # shown to the audit team only
+SYSTEM = {"id": None, "name": "FiscalAI"}          # the author of events nobody clicked for
 
 
 def _event(con, sid: int, user: dict, kind: str, text: str = "") -> None:
@@ -128,7 +130,19 @@ def _event(con, sid: int, user: dict, kind: str, text: str = "") -> None:
 def _events(con, sid: int, internal: bool = True) -> list[dict]:
     rows = con.execute("SELECT * FROM events WHERE submission_id=? ORDER BY id", (sid,)).fetchall()
     return [{"id": e["id"], "ts": e["ts"], "user_name": e["user_name"], "kind": e["kind"], "text": e["text"]}
-            for e in rows if internal or e["kind"] != "note"]      # notes are for the audit team only
+            for e in rows if internal or e["kind"] not in INTERNAL_EVENTS]
+
+
+def _mail_recorder(sid: int, to: str):
+    """Callback for the mailer: write into the invoice's history whether the employee was told."""
+    def record(error: str | None) -> None:
+        con = _db()
+        try:
+            with con:
+                _event(con, sid, SYSTEM, "email_failed" if error else "email", f"{to}: {error}" if error else to)
+        finally:
+            con.close()
+    return record
 
 
 # ------------------------------------------------------------------ duplicates
@@ -329,6 +343,8 @@ def _create(con, policy: dict, data: bytes, mime: str, sha: str, filename: str, 
     row = summary(con.execute("SELECT * FROM submissions WHERE id=?", (sid,)).fetchone())
     if alert:
         _notify(row)
+    else:                                   # approved by the policy check itself: tell the employee now
+        mailer.notify_auto_cleared(row, _mail_recorder(sid, row["employee_email"]))
 
     return {
         "id": sid,
@@ -527,7 +543,8 @@ def decide(sid: int, decision: str, comment: str, reviewer: dict) -> dict | None
     finally:
         con.close()
     decided = get(sid)
-    mailer.notify_decision(decided)          # email to the employee; never blocks or fails the decision
+    # Email to the employee; never blocks or fails the decision, and the outcome lands in the history.
+    mailer.notify_decision(decided, _mail_recorder(sid, decided["employee_email"]))
     return decided
 
 

@@ -274,3 +274,36 @@ def test_your_own_admin_settings_replace_the_built_in_one(monkeypatch, tmp_path)
     monkeypatch.setenv("DEFAULT_ADMIN", "off")
     auth.seed_admin_from_env()
     assert auth.list_users() == [] and auth.has_admin() is False            # back to the one-time setup form
+
+
+def test_the_sign_in_side_must_match_the_account(client, monkeypatch):
+    def login(who, side):
+        client.cookies.clear()
+        r = client.post("/api/auth/login", json={"email": who, "password": PASSWORD, "side": side})
+        return r.status_code, client.get("/api/auth/state").json()["user"]
+
+    code, user = login("murad@nordvik.test", "auditor")              # an employee on the Audit team tab
+    assert code == 403 and user is None                              # refused, and no session was started
+    assert client.get("/api/submissions").status_code == 401
+    code, user = login("auditor@nordvik.test", "employee")           # an auditor on the Employee tab
+    assert code == 403 and user is None
+
+    assert login("murad@nordvik.test", "employee")[1]["role"] == "employee"
+    assert login("auditor@nordvik.test", "auditor")[1]["role"] == "auditor"
+    assert login("admin@nordvik.test", "employee")[1]["role"] == "admin"      # the admin signs in on either side
+    assert login("admin@nordvik.test", "auditor")[1]["role"] == "admin"
+    assert login("murad@nordvik.test", "boss")[0] == 400
+
+    # A wrong password is still a wrong password, whatever the side: the side is never checked first.
+    client.cookies.clear()
+    bad = client.post("/api/auth/login", json={"email": "murad@nordvik.test", "password": "wrong-password", "side": "auditor"})
+    assert bad.status_code == 401
+
+    # Someone still waiting for the admin's approval is told so, and signs in as an employee meanwhile.
+    monkeypatch.setenv("AUDITOR_SIGNUP", "approval")
+    client.cookies.clear()
+    client.post("/api/auth/register", json={"name": "Leyla M", "email": "leyla@nordvik.test", "password": PASSWORD, "role": "auditor"})
+    client.cookies.clear()
+    waiting = client.post("/api/auth/login", json={"email": "leyla@nordvik.test", "password": PASSWORD, "side": "auditor"})
+    assert waiting.status_code == 403 and "not approved yet" in waiting.json()["detail"]
+    assert login("leyla@nordvik.test", "employee")[0] == 200

@@ -823,4 +823,19 @@ export const DICT: Record<string, Row> = {
   ],
   "login.show_pw": ["Show the password", "Parolu göstər", "Показать пароль"],
   "login.hide_pw": ["Hide the password", "Parolu gizlət", "Скрыть пароль"],
+  "login.side_not_auditor": [
+    "This is an employee account, so it can't sign in as audit team. Choose the Employee tab above.",
+    "Bu, işçi hesabıdır, ona görə audit komandası kimi daxil ola bilməz. Yuxarıdan İşçi vərəqini seçin.",
+    "Это учётная запись сотрудника, войти как аудит нельзя. Выберите вкладку «Сотрудник» выше.",
+  ],
+  "login.side_not_employee": [
+    "This account belongs to the audit team. Choose the Audit team tab above.",
+    "Bu hesab audit komandasına aiddir. Yuxarıdan Audit komandası vərəqini seçin.",
+    "Эта учётная запись относится к команде аудита. Выберите вкладку «Команда аудита» выше.",
+  ],
+  "login.side_pending": [
+    "Your auditor access is not approved yet. Sign in on the Employee tab for now.",
+    "Auditor girişiniz hələ təsdiqlənməyib. Hələlik İşçi vərəqindən daxil olun.",
+    "Ваш доступ аудитора ещё не подтверждён. Пока войдите через вкладку «Сотрудник».",
+  ],
 };

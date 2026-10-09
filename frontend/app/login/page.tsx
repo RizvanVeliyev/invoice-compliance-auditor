@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, isAuditor, postJson, User } from "@/lib/api";
+import { api, ApiError, isAuditor, postJson, User } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import Icon from "@/components/Icon";
 import { LogoMark } from "@/components/Logo";
@@ -58,14 +58,21 @@ export default function Login() {
     try {
       const u =
         mode === "signin"
-          ? await postJson<User>("/api/auth/login", { email, password })
+          ? await postJson<User>("/api/auth/login", { email, password, side })
           : mode === "register"
             ? await postJson<User>("/api/auth/register", { name, email, password, role: side })
             : await postJson<User>("/api/auth/setup", { name, email, password });
       setUser(u);
       router.replace(destination(u));
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("login.failed"));
+      // 403 on sign-in: the password was right, but this account belongs to the other side.
+      if (mode === "signin" && err instanceof ApiError && err.status === 403) {
+        setError(
+          err.message.includes("not approved") ? t("login.side_pending") : t(side === "auditor" ? "login.side_not_auditor" : "login.side_not_employee"),
+        );
+      } else {
+        setError(err instanceof Error ? err.message : t("login.failed"));
+      }
       setBusy(false);
     }
   }
@@ -96,7 +103,10 @@ export default function Login() {
                 role="tab"
                 aria-selected={side === s}
                 className={`side${side === s ? " is-on" : ""}`}
-                onClick={() => setSide(s)}
+                onClick={() => {
+                  setSide(s);
+                  setError(null);
+                }}
               >
                 {t(`login.side_${s}`)}
               </button>

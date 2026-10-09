@@ -102,6 +102,10 @@ class Credentials(BaseModel):
     password: str
 
 
+class SignIn(Credentials):
+    side: str | None = None     # "employee" or "auditor": the tab chosen on the sign-in page
+
+
 class Setup(Credentials):
     name: str
 
@@ -145,11 +149,24 @@ def auth_setup(body: Setup, response: Response):
 
 
 @app.post("/api/auth/login")
-def auth_login(body: Credentials, response: Response):
+def auth_login(body: SignIn, response: Response):
+    """Sign in on one side of the product. The side is checked here, not just in the page:
+    an employee account cannot sign in as audit team, nor the other way round. The admin may use either."""
     try:
         user = auth.authenticate(body.email, body.password)
     except auth.AuthError as e:
         raise HTTPException(401, str(e))
+    side = (body.side or "").strip().lower()
+    if side and user["role"] != "admin":
+        if side not in ("employee", "auditor"):
+            raise HTTPException(400, "Choose the Employee or the Audit team side.")
+        if side == "auditor" and user["role"] != "auditor":
+            # Only said after the password was right, so it tells a stranger nothing about who has an account.
+            raise HTTPException(403, "This is an employee account. Sign in on the Employee side."
+                                if not user.get("requested_role") else
+                                "Your auditor access is not approved yet. Sign in on the Employee side for now.")
+        if side == "employee" and user["role"] != "employee":
+            raise HTTPException(403, "This account belongs to the audit team. Sign in on the Audit team side.")
     _set_session(response, user)
     return user
 

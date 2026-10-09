@@ -84,7 +84,7 @@ function SubmitForm() {
       const r = await api<SubmissionReceipt>("/api/submissions", { method: "POST", body: form });
       setReceipt(r);
     } catch (err) {
-      // 409: the server refused the upload because this invoice is already in PhysicalAI.
+      // 409: the server refused the upload because this invoice is already in FiscalAI.
       if (err instanceof ApiError && err.status === 409) setDuplicate(err.message);
       else setError(err instanceof Error ? err.message : t("submit.e_send"));
     } finally {

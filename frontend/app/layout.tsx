@@ -13,9 +13,9 @@ import { I18nProvider } from "@/lib/i18n";
 import { ToastProvider } from "@/components/Toasts";
 
 export const metadata: Metadata = {
-  title: "PhysicalAI — Invoice Compliance Auditor",
+  title: "FiscalAI — Invoice Compliance Auditor",
   description:
-    "Employees send invoice PDFs; PhysicalAI checks each one against the expense policy and alerts the audit team.",
+    "Employees send invoice PDFs; FiscalAI checks each one against the expense policy and alerts the audit team.",
 };
 
 // Runs before the page is drawn: the saved choice, otherwise the system setting.

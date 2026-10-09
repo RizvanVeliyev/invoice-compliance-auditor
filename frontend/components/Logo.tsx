@@ -1,4 +1,4 @@
-/** The PhysicalAI mark: a paper receipt with a torn lower edge, two printed lines and a check. */
+/** The FiscalAI mark: a paper receipt with a torn lower edge, two printed lines and a check. */
 export function LogoMark({ size = 30 }: { size?: number }) {
   return (
     <svg className="logo-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden focusable="false">
@@ -17,7 +17,7 @@ export default function Logo({ size = 30 }: { size?: number }) {
     <span className="logo">
       <LogoMark size={size} />
       <span className="logo-word">
-        Physical<span className="logo-ai">AI</span>
+        Fiscal<span className="logo-ai">AI</span>
       </span>
     </span>
   );

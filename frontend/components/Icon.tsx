@@ -87,6 +87,19 @@ const PATHS: Record<string, React.ReactNode> = {
   ),
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  eye: (
+    <>
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  "eye-off": (
+    <>
+      <path d="M4 4l16 16" />
+      <path d="M9.9 5.3A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.2 6.8A17 17 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 4-.9" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    </>
+  ),
   send: <path d="M4 12 20 4l-6 16-3-7z" />,
   grow: <path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7" />,
   shrink: <path d="M20 10h-6V4M14 10l7-7M4 14h6v6M10 14l-7 7" />,

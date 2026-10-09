@@ -821,4 +821,6 @@ export const DICT: Record<string, Row> = {
     "Cavablar siyasət qaydalarından gəlir. Köməkçi heç nəyi təsdiqləmir və ya rədd etmir.",
     "Ответы основаны на правилах политики. Помощник ничего не одобряет и не отклоняет.",
   ],
+  "login.show_pw": ["Show the password", "Parolu göstər", "Показать пароль"],
+  "login.hide_pw": ["Hide the password", "Parolu gizlət", "Скрыть пароль"],
 };

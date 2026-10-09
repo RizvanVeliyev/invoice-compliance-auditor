@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, isAuditor, postJson, User } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import Icon from "@/components/Icon";
 import { LogoMark } from "@/components/Logo";
 import { useI18n } from "@/lib/i18n";
 
@@ -27,6 +28,7 @@ export default function Login() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsApproval, setNeedsApproval] = useState(false);
@@ -120,14 +122,26 @@ export default function Login() {
         </label>
         <label className="fld">
           <span>{t(creating ? "login.password_new" : "login.password")}</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={creating ? "new-password" : "current-password"}
-            minLength={creating ? 8 : undefined}
-            required
-          />
+          <span className="pw">
+            <input
+              type={reveal ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={creating ? "new-password" : "current-password"}
+              minLength={creating ? 8 : undefined}
+              required
+            />
+            <button
+              type="button"
+              className="pw-eye"
+              onClick={() => setReveal((v) => !v)}
+              aria-pressed={reveal}
+              aria-label={t(reveal ? "login.hide_pw" : "login.show_pw")}
+              title={t(reveal ? "login.hide_pw" : "login.show_pw")}
+            >
+              <Icon name={reveal ? "eye-off" : "eye"} />
+            </button>
+          </span>
         </label>
 
         {error && (
